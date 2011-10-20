@@ -68,10 +68,12 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		return client;
 	}
 
-	public final void onOpen(org.webbitserver.WebSocketConnection connection, C client) throws Exception {
+	// Using Object instead of connection to allow this to compile in GWT, since
+	// these are dead methods anyway
+	public final void onOpen(Object connection, C client) throws Exception {
 		throw new UnsupportedOperationException("Cannot be called from client code");
 	}
-	public final void onClose(org.webbitserver.WebSocketConnection connection, C client) throws Exception {
+	public final void onClose(Object connection, C client) throws Exception {
 		throw new UnsupportedOperationException("Cannot be called from client code");
 	}
 }

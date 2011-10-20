@@ -17,23 +17,26 @@
 package org.webbitserver.gwt.shared;
 
 /**
+ * Starting interface for building the methods the server may call on the client.
+ * 
  * interface MyServer extends Client<MyServer,MyClient> {
  * }
  * interface MyClient extends Client<MyClient,MyServer> {
  * }
- * My
+ * 
  *
  */
 public interface Client<C extends Client<C,S>, S extends Server<S,C>> {
-	//S getServer();
 
 	/**
-	 * Callback called when the connection to the server has been established
+	 * Callback called when the connection to the server has been established. Should not be called
+	 * directly from the server.
 	 */
 	void onOpen();
 
 	/**
-	 * Callback called when the connection to the server has been closed
+	 * Callback called when the connection to the server has been closed. Should not be called 
+	 * directly from the server.
 	 */
 	void onClose();
 

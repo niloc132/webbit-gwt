@@ -47,7 +47,7 @@ public class WebSocket extends JavaScriptObject {
 	 * 
 	 * @param message serialized data to send to the server
 	 */
-	public native void sendMessage(String message) /*-{
+	public native final void sendMessage(String message) /*-{
 		try {
 			this.send(message);
 		} catch (e) {
@@ -55,7 +55,7 @@ public class WebSocket extends JavaScriptObject {
 		}
 	}-*/;
 
-	public native void close() /*-{
+	public native final void close() /*-{
 		this.close();
 	}-*/;
 }
