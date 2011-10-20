@@ -5,4 +5,8 @@
 	<source path="shared"/>
 
 	<super-source path="super" />
+
+	<generate-with class="org.webbitserver.gwt.rebind.WebbitServerGenerator">
+		<when-type-assignable class="org.webbitserver.gwt.shared.Server"/>
+	</generate-with>
 </module>
