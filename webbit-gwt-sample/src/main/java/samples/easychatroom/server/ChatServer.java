@@ -20,7 +20,10 @@ import java.io.IOException;
 
 import org.webbitserver.WebServer;
 import org.webbitserver.WebServers;
+import org.webbitserver.gwt.server.GwtWebService;
 import org.webbitserver.handler.EmbeddedResourceHandler;
+
+import samples.easychatroom.shared.ChatClient;
 
 /**
  * @author colin
@@ -35,6 +38,7 @@ public class ChatServer {
 	public static void main(String[] args) throws IOException {
 		WebServer webServer = WebServers.createWebServer(9876)
 		.add(new EmbeddedResourceHandler("static"))
+		.add("/chat", new GwtWebService<samples.easychatroom.shared.ChatServer,ChatClient>(new ChatServerImpl(), ChatClient.class))
 		.start();
 
 		System.out.println("Chat room running on: " + webServer.getUri());

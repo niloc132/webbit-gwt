@@ -16,7 +16,14 @@
  */
 package samples.easychatroom.client;
 
+import samples.easychatroom.shared.ChatServer;
+
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.ui.RootLayoutPanel;
 
 /**
  * @author colin
@@ -24,13 +31,24 @@ import com.google.gwt.core.client.EntryPoint;
  */
 public class SampleEntryPoint implements EntryPoint {
 
-	/* (non-Javadoc)
-	 * @see com.google.gwt.core.client.EntryPoint#onModuleLoad()
-	 */
 	@Override
 	public void onModuleLoad() {
-		// TODO Auto-generated method stub
+		final ChatServer server = GWT.create(ChatServer.class);
 
+		final ChatClientWidget impl = new ChatClientWidget();
+		server.setClient(impl);
+
+		String username = Window.prompt("Select a username", "");
+		server.login(username);
+
+		impl.send.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				server.say(impl.message.getValue());
+			}
+		});
+
+		RootLayoutPanel.get().add(impl);
 	}
 
 }
