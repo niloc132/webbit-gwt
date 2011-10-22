@@ -25,8 +25,8 @@ import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.SerializationException;
-import com.google.gwt.user.client.rpc.SerializationStreamFactory;
-import com.google.gwt.user.client.rpc.impl.RequestCallbackAdapter.ResponseReader;
+import com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader;
+import com.google.gwt.user.client.rpc.impl.Serializer;
 
 /**
  * Simple impl of what the client thinks of the server as able to do.
@@ -57,16 +57,14 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		});
 	}
 
-	protected ResponseReader __getReader() {
-		return ResponseReader.OBJECT;
-	}
-	protected SerializationStreamFactory __getDeserializationFactory() {
-		return null;
-	}
+	protected abstract Serializer __getSerializer();
 
 	private void __onMessage(String message) throws SerializationException {
-		assert message.startsWith("//OK");
-		ClientInvocation decodedMessage = (ClientInvocation) __getReader().read(__getDeserializationFactory().createStreamReader(message));
+		assert message.startsWith("//OK");//consider axing this , and the substring below
+		ClientSerializationStreamReader clientSerializationStreamReader = new ClientSerializationStreamReader(__getSerializer());
+		clientSerializationStreamReader.prepareToRead(message.substring(4));
+
+		ClientInvocation decodedMessage = (ClientInvocation) clientSerializationStreamReader.readObject();
 		__invoke(decodedMessage.getMethod(), decodedMessage.getParameters());
 	}
 

@@ -22,8 +22,10 @@ import org.webbitserver.gwt.client.impl.ServerImpl;
 import org.webbitserver.gwt.shared.Client;
 import org.webbitserver.gwt.shared.Server;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.ext.Generator;
 import com.google.gwt.core.ext.GeneratorContext;
+import com.google.gwt.core.ext.GeneratorContextExt;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
@@ -33,8 +35,11 @@ import com.google.gwt.core.ext.typeinfo.JParameter;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.dev.util.Name;
 import com.google.gwt.editor.rebind.model.ModelUtils;
+import com.google.gwt.user.client.rpc.impl.Serializer;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
+import com.google.gwt.user.rebind.rpc.SerializableTypeOracleBuilder;
+import com.google.gwt.user.rebind.rpc.TypeSerializerCreator;
 
 /**
  * @author colin
@@ -74,15 +79,32 @@ public class WebbitServerGenerator extends Generator {
 		sw.indentln("super(\"/chat\");");//TODO replace with data from annotation or something
 		sw.println("}");
 
-		for (JMethod m : toGenerate.getMethods()) {
+		//Find all types that may go over the wire
+		SerializableTypeOracleBuilder serverSerializerBuilder = new SerializableTypeOracleBuilder(logger, context.getPropertyOracle(), (GeneratorContextExt) context);
+		appendMethodParameters(logger, toGenerate, Client.class, serverSerializerBuilder);
+		SerializableTypeOracleBuilder clientSerializerBuilder = new SerializableTypeOracleBuilder(logger, context.getPropertyOracle(), (GeneratorContextExt) context);
+		appendMethodParameters(logger, toGenerate, Server.class, clientSerializerBuilder);
+
+		String tsName = simpleName + "_TypeSerializer";
+		TypeSerializerCreator serializerCreator = new TypeSerializerCreator(logger, clientSerializerBuilder.build(logger), serverSerializerBuilder.build(logger), (GeneratorContextExt) context, packageName + "." + tsName, tsName);
+		serializerCreator.realize(logger);
+
+		// Make the newly created Serializer available at runtime
+		sw.println("protected %1$s __getSerializer() {", Serializer.class.getName());
+		sw.indentln("return %2$s.<%1$s>create(%1$s.class);", tsName, GWT.class.getName());
+		sw.println("}");
+
+		// Build methods that call from the client to the server
+		for (JMethod m : toGenerate.getInheritableMethods()) {
 			if (isRemoteMethod(m, Server.class)) {
 				printServerMethodBody(logger, context, sw, m);
 			}
 		}
 
-		sw.println("protected void __invoke(String method, Object[] params) {");
 
-		for (JMethod m : clientType.getMethods()) {
+		// Read incoming calls and dispatch them to the correct client method
+		sw.println("protected void __invoke(String method, Object[] params) {");
+		for (JMethod m : clientType.getInheritableMethods()) {
 			if (isRemoteMethod(m, Client.class)) {
 				JParameter[] params = m.getParameters();
 				sw.println("if (method.equals(\"%1$s\") && params.length == %2$d) {", m.getName(), params.length);
@@ -101,7 +123,6 @@ public class WebbitServerGenerator extends Generator {
 				sw.println("}");
 			}
 		}
-
 		sw.println("}");
 
 
@@ -111,6 +132,18 @@ public class WebbitServerGenerator extends Generator {
 		sw.commit(logger);
 
 		return factory.getCreatedClassName();
+	}
+
+	private void appendMethodParameters(TreeLogger logger,
+			JClassType toGenerate,
+			Class<?> superClass, SerializableTypeOracleBuilder clientSerializerBuilder) {
+		for (JMethod m : toGenerate.getMethods()) {
+			if (isRemoteMethod(m, superClass)) {
+				for (JParameter param : m.getParameters()) {
+					clientSerializerBuilder.addRootType(logger, param.getType());
+				}
+			}
+		}
 	}
 
 	/**
@@ -132,9 +165,9 @@ public class WebbitServerGenerator extends Generator {
 	 * @param m
 	 * @return
 	 */
-	private boolean isRemoteMethod(JMethod m, Class<?> wrapper) {
-		assert wrapper == Server.class || wrapper == Client.class;
-		return !m.getEnclosingType().getQualifiedSourceName().equals(wrapper.getName());
+	private boolean isRemoteMethod(JMethod m, Class<?> superClass) {
+		assert superClass == Server.class || superClass == Client.class;
+		return !m.getEnclosingType().getQualifiedSourceName().equals(superClass.getName());
 	}
 
 }
