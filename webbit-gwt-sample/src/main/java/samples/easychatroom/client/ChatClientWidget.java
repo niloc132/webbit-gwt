@@ -30,7 +30,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class ChatClientWidget implements ChatClient, IsWidget {
 	FlowPanel panel = new FlowPanel();
-	TextBox message;
+	TextBox message = new TextBox();
 	DockLayoutPanel root;
 	Button send = new Button("Send");
 

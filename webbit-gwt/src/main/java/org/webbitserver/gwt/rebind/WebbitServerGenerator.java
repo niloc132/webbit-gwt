@@ -69,7 +69,7 @@ public class WebbitServerGenerator extends Generator {
 		SourceWriter sw = factory.createSourceWriter(context, pw);
 
 		sw.println("public %1$s() {", simpleName);
-		sw.indentln("super(\"chat\");");//TODO replace with data from annotation or something
+		sw.indentln("super(\"/chat\");");//TODO replace with data from annotation or something
 		sw.println("}");
 
 		for (JMethod m : toGenerate.getMethods()) {
