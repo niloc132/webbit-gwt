@@ -19,6 +19,7 @@ package org.webbitserver.gwt.rebind;
 import java.io.PrintWriter;
 
 import org.webbitserver.gwt.client.impl.ServerImpl;
+import org.webbitserver.gwt.shared.Client;
 import org.webbitserver.gwt.shared.Server;
 
 import com.google.gwt.core.ext.Generator;
@@ -28,6 +29,7 @@ import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JMethod;
+import com.google.gwt.core.ext.typeinfo.JParameter;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.dev.util.Name;
 import com.google.gwt.editor.rebind.model.ModelUtils;
@@ -60,10 +62,10 @@ public class WebbitServerGenerator extends Generator {
 			return packageName + "." + simpleName;
 		}
 		JClassType serverType = oracle.findType(Name.getSourceNameForClass(Server.class));
-		String clientType = ModelUtils.findParameterizationOf(serverType, toGenerate)[1].getQualifiedSourceName();
+		JClassType clientType = ModelUtils.findParameterizationOf(serverType, toGenerate)[1];
 
 		ClassSourceFileComposerFactory factory = new ClassSourceFileComposerFactory(packageName, simpleName);
-		factory.setSuperclass(Name.getSourceNameForClass(ServerImpl.class) + "<" + typeName + "," + clientType + ">");
+		factory.setSuperclass(Name.getSourceNameForClass(ServerImpl.class) + "<" + typeName + "," + clientType.getQualifiedSourceName() + ">");
 		factory.addImplementedInterface(typeName);
 
 		SourceWriter sw = factory.createSourceWriter(context, pw);
@@ -73,13 +75,37 @@ public class WebbitServerGenerator extends Generator {
 		sw.println("}");
 
 		for (JMethod m : toGenerate.getMethods()) {
-			if (isRemoteMethod(m)) {
-				printMethodBody(logger, context, sw, m);
+			if (isRemoteMethod(m, Server.class)) {
+				printServerMethodBody(logger, context, sw, m);
 			}
 		}
-		sw.println("protected void __onMessage(String message) {");
+
+		sw.println("protected void __invoke(String method, Object[] params) {");
+
+		for (JMethod m : clientType.getMethods()) {
+			if (isRemoteMethod(m, Client.class)) {
+				JParameter[] params = m.getParameters();
+				sw.println("if (method.equals(\"%1$s\") && params.length == %2$d) {", m.getName(), params.length);
+				sw.indent();
+				sw.println("getClient().%1$s(", m.getName());
+				sw.indent();
+				for (int i = 0; i < params.length; i++) {
+					if (i != 0) {
+						sw.print(",");
+					}
+					sw.println("(%1$s)params[%2$d]", params[i].getType().getQualifiedSourceName(), i);
+				}
+				sw.outdent();
+				sw.println(");");
+				sw.outdent();
+				sw.println("}");
+			}
+		}
+
 		sw.println("}");
-		sw.println("protected void __onError(Exception message) {");
+
+
+		sw.println("protected void __onError(Exception error) {");
 		sw.println("}");
 
 		sw.commit(logger);
@@ -88,12 +114,14 @@ public class WebbitServerGenerator extends Generator {
 	}
 
 	/**
+	 * Writes out the method to use to invoke a server call. Mostly derived from RPC's way of building proxy methods
+	 * 
 	 * @param logger
 	 * @param context
 	 * @param sw
 	 * @param m
 	 */
-	private void printMethodBody(TreeLogger logger, GeneratorContext context,
+	private void printServerMethodBody(TreeLogger logger, GeneratorContext context,
 			SourceWriter sw, JMethod m) {
 		sw.println("%1$s {", m.getReadableDeclaration(false, true, true, true, true));
 		sw.println();
@@ -104,8 +132,9 @@ public class WebbitServerGenerator extends Generator {
 	 * @param m
 	 * @return
 	 */
-	private boolean isRemoteMethod(JMethod m) {
-		return !m.getEnclosingType().getQualifiedSourceName().equals(Server.class.getName());
+	private boolean isRemoteMethod(JMethod m, Class<?> wrapper) {
+		assert wrapper == Server.class || wrapper == Client.class;
+		return !m.getEnclosingType().getQualifiedSourceName().equals(wrapper.getName());
 	}
 
 }

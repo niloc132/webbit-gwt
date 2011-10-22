@@ -19,10 +19,14 @@ package org.webbitserver.gwt.client.impl;
 import org.webbitserver.WebSocketConnection;
 import org.webbitserver.gwt.shared.Client;
 import org.webbitserver.gwt.shared.Server;
+import org.webbitserver.gwt.shared.impl.ClientInvocation;
 
 import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.client.rpc.SerializationStreamFactory;
+import com.google.gwt.user.client.rpc.impl.RequestCallbackAdapter.ResponseReader;
 
 /**
  * Simple impl of what the client thinks of the server as able to do.
@@ -40,7 +44,11 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		connection = WebSocket.create(server, path, new WebSocket.Callback() {
 			@Override
 			public void onMessage(String data) {
-				ServerImpl.this.__onMessage(data);
+				try {
+					ServerImpl.this.__onMessage(data);
+				} catch (Exception e) {
+					ServerImpl.this.__onError(e);
+				}
 			}
 			@Override
 			public void onError(JavaScriptObject error) {
@@ -49,7 +57,20 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		});
 	}
 
-	protected abstract void __onMessage(String message);
+	protected ResponseReader __getReader() {
+		return ResponseReader.OBJECT;
+	}
+	protected SerializationStreamFactory __getDeserializationFactory() {
+		return null;
+	}
+
+	private void __onMessage(String message) throws SerializationException {
+		assert message.startsWith("//OK");
+		ClientInvocation decodedMessage = (ClientInvocation) __getReader().read(__getDeserializationFactory().createStreamReader(message));
+		__invoke(decodedMessage.getMethod(), decodedMessage.getParameters());
+	}
+
+	protected abstract void __invoke(String method, Object[] params);
 	protected abstract void __onError(Exception error);
 
 	//	public final void __setConnection(WebSocket connection) {
