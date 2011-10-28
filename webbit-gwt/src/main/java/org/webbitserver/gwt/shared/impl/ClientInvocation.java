@@ -16,6 +16,7 @@
  */
 package org.webbitserver.gwt.shared.impl;
 
+import com.google.gwt.user.client.rpc.GwtTransient;
 import com.google.gwt.user.client.rpc.IsSerializable;
 
 /**
@@ -24,6 +25,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  */
 public class ClientInvocation implements IsSerializable {
 	private String method;
+	@GwtTransient
 	private Object[] parameters;
 
 	public ClientInvocation() {
@@ -39,9 +41,23 @@ public class ClientInvocation implements IsSerializable {
 		return method;
 	}
 	/**
+	 * Package-protected to keep it easy to call by custom serializers
+	 * @param method
+	 */
+	void setMethod(String method) {
+		this.method = method;
+	}
+	/**
 	 * @return the parameters
 	 */
 	public Object[] getParameters() {
 		return parameters;
+	}
+	/**
+	 * Package-protected to keep it easy to call by custom serializers
+	 * @param parameters
+	 */
+	void setParameters(Object[] parameters) {
+		this.parameters = parameters;
 	}
 }

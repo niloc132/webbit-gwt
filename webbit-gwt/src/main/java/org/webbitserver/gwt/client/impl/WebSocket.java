@@ -38,7 +38,7 @@ public class WebSocket extends JavaScriptObject {
 		var ws = new $wnd.WebSocket('ws://' + server + path);
 		ws.onmessage = function(e) {
 			$entry(callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onMessage(Ljava/lang/String;))(e.data);
-		}
+		};
 		ws.onerror = $entry(callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onError(Lcom/google/gwt/core/client/JavaScriptObject;));
 		return ws;
 	}-*/;

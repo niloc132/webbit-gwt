@@ -88,7 +88,7 @@ public class WebbitServerGenerator extends Generator {
 
 		SerializableTypeOracleBuilder clientSerializerBuilder = new SerializableTypeOracleBuilder(logger, context.getPropertyOracle(), (GeneratorContextExt) context);
 		appendMethodParameters(logger, toGenerate, Server.class, clientSerializerBuilder);
-		serverSerializerBuilder.addRootType(logger, oracle.findType(ServerInvocation.class.getName()));
+		clientSerializerBuilder.addRootType(logger, oracle.findType(ServerInvocation.class.getName()));
 
 		String tsName = simpleName + "_TypeSerializer";
 		TypeSerializerCreator serializerCreator = new TypeSerializerCreator(logger, clientSerializerBuilder.build(logger), serverSerializerBuilder.build(logger), (GeneratorContextExt) context, packageName + "." + tsName, tsName);
@@ -166,7 +166,7 @@ public class WebbitServerGenerator extends Generator {
 
 		sw.println("__sendMessage(\"%1$s\"", m.getName());
 		for (JParameter param : m.getParameters()) {
-			sw.println(", %1$s", param.getName());
+			sw.indentln(", %1$s", param.getName());
 		}
 		sw.println(");");
 
