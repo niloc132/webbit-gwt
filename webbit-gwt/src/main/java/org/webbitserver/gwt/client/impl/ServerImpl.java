@@ -20,12 +20,16 @@ import org.webbitserver.WebSocketConnection;
 import org.webbitserver.gwt.shared.Client;
 import org.webbitserver.gwt.shared.Server;
 import org.webbitserver.gwt.shared.impl.ClientInvocation;
+import org.webbitserver.gwt.shared.impl.ServerInvocation;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamWriter;
 import com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader;
+import com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter;
 import com.google.gwt.user.client.rpc.impl.Serializer;
 
 /**
@@ -60,6 +64,10 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	protected abstract Serializer __getSerializer();
 
 	private void __onMessage(String message) throws SerializationException {
+		if (getClient() == null) {
+			GWT.log("Client has not been assigned for " + getClass() + ": make sure to call setClient to receive server messages.");
+			return;
+		}
 		assert message.startsWith("//OK");//consider axing this , and the substring below
 		ClientSerializationStreamReader clientSerializationStreamReader = new ClientSerializationStreamReader(__getSerializer());
 		clientSerializationStreamReader.prepareToRead(message.substring(4));
@@ -68,12 +76,28 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		__invoke(decodedMessage.getMethod(), decodedMessage.getParameters());
 	}
 
+	protected void __sendMessage(String methodName, Object...params ) {
+		ServerInvocation invoke = new ServerInvocation(methodName, params);
+
+		AbstractSerializationStreamWriter writer = new ClientSerializationStreamWriter(__getSerializer(), "", "");
+		writer.prepareToWrite();
+		writer.writeString("org.webbitserver.gwt.shared.impl.WebbitService");
+		writer.writeString("dummy");
+		writer.writeInt(1);
+
+		writer.writeString("org.webbitserver.gwt.shared.impl.ServerInvocation");
+
+		try {
+			writer.writeObject(invoke);
+		} catch (SerializationException e) {
+			__onError(e);
+		}
+		__getConnection().sendMessage(writer.toString());
+	}
+
 	protected abstract void __invoke(String method, Object[] params);
 	protected abstract void __onError(Exception error);
 
-	//	public final void __setConnection(WebSocket connection) {
-	//		this.connection = connection;
-	//	}
 	public final WebSocket __getConnection() {
 		return connection;
 	}

@@ -46,7 +46,7 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 	static {
 		Method m = null;
 		try {
-			m = WebbitService.class.getDeclaredMethod("dummy", Object.class);
+			m = WebbitService.class.getDeclaredMethod("dummy", ServerInvocation.class);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -79,7 +79,7 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 
 	@Override
 	public void onMessage(WebSocketConnection connection, String msg) throws Throwable {
-		RPCRequest req = RPC.decodeRequest(msg, server.getClass(), makeProvider());
+		RPCRequest req = RPC.decodeRequest(msg, null, makeProvider());
 		//Method m = req.getMethod();//garbage
 
 		ServerInvocation invoke = (ServerInvocation)req.getParameters()[0];
@@ -145,21 +145,28 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 		@Override
 		public Object invoke(Object proxy, Method method, Object[] args)
 		throws Throwable {
+			// First, directly call methods defined on Object (is this even needed?)
+			if (method.getDeclaringClass() == Object.class) {
+				return method.invoke(this, args);
+			}
+			// Then, make sure the server isn't calling client bookkeeping methods
 			if (method.getDeclaringClass() == Client.class) {
 				throw new IllegalStateException("This method is only intended to be called on the client itself");
-			} else if (method.getDeclaringClass() == Object.class) {
-				return method.invoke(this, args);
 			}
 			//TODO work this over ahead of time, dont make a runtime check
 			if (method.getReturnType() != Void.class) {
 				throw new IllegalArgumentException("Calls to client must be of return type Void");
 			}
+
+			// Build an invocation instance to send to the client
 			ClientInvocation invocation = new ClientInvocation(method.getName(), args);
 
-			String message = RPC.encodeResponseForSuccess(DUMMY_RPC_METHOD, invocation, makePolicy(), 0);
+			// Encode and send the message
+			int flags = 0;
+			String message = RPC.encodeResponseForSuccess(DUMMY_RPC_METHOD, invocation, makePolicy(), flags);
 			connection.send(message);
 
-			return null;//void
+			return null;//void method, so no return val
 		}
 	}
 

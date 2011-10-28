@@ -21,6 +21,8 @@ import java.io.PrintWriter;
 import org.webbitserver.gwt.client.impl.ServerImpl;
 import org.webbitserver.gwt.shared.Client;
 import org.webbitserver.gwt.shared.Server;
+import org.webbitserver.gwt.shared.impl.ClientInvocation;
+import org.webbitserver.gwt.shared.impl.ServerInvocation;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.ext.Generator;
@@ -82,8 +84,11 @@ public class WebbitServerGenerator extends Generator {
 		//Find all types that may go over the wire
 		SerializableTypeOracleBuilder serverSerializerBuilder = new SerializableTypeOracleBuilder(logger, context.getPropertyOracle(), (GeneratorContextExt) context);
 		appendMethodParameters(logger, toGenerate, Client.class, serverSerializerBuilder);
+		serverSerializerBuilder.addRootType(logger, oracle.findType(ClientInvocation.class.getName()));
+
 		SerializableTypeOracleBuilder clientSerializerBuilder = new SerializableTypeOracleBuilder(logger, context.getPropertyOracle(), (GeneratorContextExt) context);
 		appendMethodParameters(logger, toGenerate, Server.class, clientSerializerBuilder);
+		serverSerializerBuilder.addRootType(logger, oracle.findType(ServerInvocation.class.getName()));
 
 		String tsName = simpleName + "_TypeSerializer";
 		TypeSerializerCreator serializerCreator = new TypeSerializerCreator(logger, clientSerializerBuilder.build(logger), serverSerializerBuilder.build(logger), (GeneratorContextExt) context, packageName + "." + tsName, tsName);
@@ -157,7 +162,15 @@ public class WebbitServerGenerator extends Generator {
 	private void printServerMethodBody(TreeLogger logger, GeneratorContext context,
 			SourceWriter sw, JMethod m) {
 		sw.println("%1$s {", m.getReadableDeclaration(false, true, true, true, true));
-		sw.println();
+		sw.indent();
+
+		sw.println("__sendMessage(\"%1$s\"", m.getName());
+		for (JParameter param : m.getParameters()) {
+			sw.println(", %1$s", param.getName());
+		}
+		sw.println(");");
+
+		sw.outdent();
 		sw.println("}");
 	}
 
@@ -169,5 +182,4 @@ public class WebbitServerGenerator extends Generator {
 		assert superClass == Server.class || superClass == Client.class;
 		return !m.getEnclosingType().getQualifiedSourceName().equals(superClass.getName());
 	}
-
 }

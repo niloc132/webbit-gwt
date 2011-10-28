@@ -23,11 +23,12 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  *
  */
 public class ServerInvocation implements IsSerializable {
-	private final String method;
-	private final Object[] parameters;
-	/**
-	 * 
-	 */
+	private String method;
+	private Object[] parameters;
+
+	public ServerInvocation() {
+	}
+
 	public ServerInvocation(String method, Object[] parameters) {
 		this.method = method;
 		this.parameters = parameters;
