@@ -7,7 +7,7 @@
 	<packaging>pom</packaging>
 	<name>Webbit GWT Parent Project</name>
 	<properties>
-		<webbit.version>0.1.13</webbit.version>
+		<webbit.version>0.1.17</webbit.version>
 		<gwt.version>2.4.0</gwt.version>
 		<gwt.plugin.version>2.3.0</gwt.plugin.version>
 	</properties>
