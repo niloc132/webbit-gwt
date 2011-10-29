@@ -16,7 +16,10 @@
  */
 package samples.easychatroom.client;
 
+import org.webbitserver.gwt.client.AbstractClientImpl;
+
 import samples.easychatroom.shared.ChatClient;
+import samples.easychatroom.shared.ChatServer;
 
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.ui.Button;
@@ -28,7 +31,7 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-public class ChatClientWidget implements ChatClient, IsWidget {
+public class ChatClientWidget extends AbstractClientImpl<ChatClient, ChatServer> implements ChatClient, IsWidget {
 	FlowPanel panel = new FlowPanel();
 	TextBox message = new TextBox();
 	DockLayoutPanel root;
@@ -48,16 +51,6 @@ public class ChatClientWidget implements ChatClient, IsWidget {
 	@Override
 	public Widget asWidget() {
 		return root;
-	}
-
-	@Override
-	public void onOpen() {
-
-	}
-
-	@Override
-	public void onClose() {
-
 	}
 
 	@Override

@@ -16,6 +16,9 @@
  */
 package samples.easychatroom.client;
 
+import org.webbitserver.gwt.client.ConnectionOpenedEvent;
+import org.webbitserver.gwt.client.ConnectionOpenedEvent.ConnectionOpenedHandler;
+
 import samples.easychatroom.shared.ChatServer;
 
 import com.google.gwt.core.client.EntryPoint;
@@ -38,8 +41,13 @@ public class SampleEntryPoint implements EntryPoint {
 		final ChatClientWidget impl = new ChatClientWidget();
 		server.setClient(impl);
 
-		String username = Window.prompt("Select a username", "");
-		server.login(username);
+		impl.addConnectionOpenedHandler(new ConnectionOpenedHandler() {
+			@Override
+			public void onConnectionOpened(ConnectionOpenedEvent event) {
+				String username = Window.prompt("Select a username", "");
+				server.login(username);
+			}
+		});
 
 		impl.send.addClickHandler(new ClickHandler() {
 			@Override
