@@ -61,6 +61,9 @@ public class ChatServerImpl extends AbstractServerImpl<ChatServer, ChatClient> i
 				throw new IllegalArgumentException("Username already in use");
 			}
 		}
+		for (ChatClient connected : loggedIn.keySet()) {
+			connected.join(username);
+		}
 		loggedIn.put(c, username);
 	}
 
