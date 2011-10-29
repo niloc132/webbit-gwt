@@ -154,7 +154,7 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 				throw new IllegalStateException("This method is only intended to be called on the client itself");
 			}
 			//TODO work this over ahead of time, dont make a runtime check
-			if (method.getReturnType() != Void.class) {
+			if (method.getReturnType() != void.class && method.getReturnType() != Void.class) {
 				throw new IllegalArgumentException("Calls to client must be of return type Void");
 			}
 

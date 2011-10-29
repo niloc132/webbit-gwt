@@ -47,6 +47,20 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		String server = Window.Location.getHost();
 		connection = WebSocket.create(server, path, new WebSocket.Callback() {
 			@Override
+			public void onOpen() {
+				C client = __checkClient();
+				if (client != null) {
+					client.onOpen();
+				}
+			}
+			@Override
+			public void onClose() {
+				C client = __checkClient();
+				if (client != null) {
+					client.onClose();
+				}
+			}
+			@Override
 			public void onMessage(String data) {
 				try {
 					ServerImpl.this.__onMessage(data);
@@ -64,10 +78,7 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	protected abstract Serializer __getSerializer();
 
 	private void __onMessage(String message) throws SerializationException {
-		if (getClient() == null) {
-			GWT.log("Client has not been assigned for " + getClass() + ": make sure to call setClient to receive server messages.");
-			return;
-		}
+		__checkClient();
 		assert message.startsWith("//OK");//consider axing this , and the substring below
 		ClientSerializationStreamReader clientSerializationStreamReader = new ClientSerializationStreamReader(__getSerializer());
 		clientSerializationStreamReader.prepareToRead(message.substring(4));
@@ -110,6 +121,13 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	@Override
 	public final C getClient() {
 		return client;
+	}
+
+	private final C __checkClient() {
+		if (!GWT.isProdMode() && getClient() == null) {
+			GWT.log("Client has not been assigned for " + getClass() + ": make sure to call setClient to receive server messages.");
+		}
+		return getClient();
 	}
 
 	@Override

@@ -27,19 +27,20 @@ public class WebSocket extends JavaScriptObject {
 		// jso protected ctor
 	}
 	public interface Callback {
+		void onOpen();
+		void onClose();
 		void onMessage(String data);
 		void onError(JavaScriptObject error);
 	}
-	public static WebSocket create(String server, String path) {
 
-		return create(server, path, null);
-	}
 	public static native WebSocket create(String server, String path, Callback callback) /*-{
 		var ws = new $wnd.WebSocket('ws://' + server + path);
-		ws.onmessage = function(e) {
-			$entry(callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onMessage(Ljava/lang/String;))(e.data);
-		};
-		ws.onerror = $entry(callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onError(Lcom/google/gwt/core/client/JavaScriptObject;));
+		ws.onopen = $entry(function(){callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onOpen()()});
+		ws.onclose = $entry(function(){callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onClose()()});
+		ws.onmessage = $entry(function(e) {
+			callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onMessage(Ljava/lang/String;)(e.data);
+		});
+		ws.onerror = $entry(function(e){callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onError(Lcom/google/gwt/core/client/JavaScriptObject;)(e)});
 		return ws;
 	}-*/;
 
