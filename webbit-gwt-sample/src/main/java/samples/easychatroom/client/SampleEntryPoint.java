@@ -53,6 +53,7 @@ public class SampleEntryPoint implements EntryPoint {
 			@Override
 			public void onClick(ClickEvent event) {
 				server.say(impl.message.getValue());
+				impl.message.setValue("");
 			}
 		});
 

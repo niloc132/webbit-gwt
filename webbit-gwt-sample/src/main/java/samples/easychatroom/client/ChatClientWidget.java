@@ -25,10 +25,11 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 public class ChatClientWidget extends AbstractClientImpl<ChatClient, ChatServer> implements ChatClient, IsWidget {
@@ -40,12 +41,15 @@ public class ChatClientWidget extends AbstractClientImpl<ChatClient, ChatServer>
 	public ChatClientWidget() {
 		root = new DockLayoutPanel(Unit.PX);
 
-		VerticalPanel input = new VerticalPanel();
+		HorizontalPanel input = new HorizontalPanel();
+		message.setWidth("200px");
 		input.add(message);
 		input.add(send);
 
 		root.addSouth(input, 30);
-		root.add(panel);
+		ScrollPanel scroll = new ScrollPanel();
+		scroll.add(panel);
+		root.add(scroll);
 	}
 
 	@Override
@@ -55,17 +59,23 @@ public class ChatClientWidget extends AbstractClientImpl<ChatClient, ChatServer>
 
 	@Override
 	public void say(String username, String message) {
-		panel.add(new Label(username + ": " + message));
+		addMessage(username + ": " + message);
 	}
 
 	@Override
 	public void join(String username) {
-		panel.add(new Label(username + " has joined"));
+		addMessage(username + " has joined");
 	}
 
 	@Override
 	public void part(String username) {
-		panel.add(new Label(username + " has left"));
+		addMessage(username + " has left");
+	}
+
+	protected void addMessage(String message) {
+		Label m = new Label(message);
+		panel.add(m);
+		m.getElement().scrollIntoView();
 	}
 
 }
