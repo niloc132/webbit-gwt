@@ -20,7 +20,7 @@ import com.google.gwt.user.client.rpc.GwtTransient;
 import com.google.gwt.user.client.rpc.IsSerializable;
 
 /**
- * @author colin
+ * Data passed to the server to tell it a method needs to be invoked.
  *
  */
 public class ServerInvocation implements IsSerializable {

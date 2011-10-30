@@ -23,7 +23,10 @@ import com.google.gwt.event.shared.GwtEvent;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
 /**
- * @author colin
+ * Event fired to indicate that a WebSocket connection has closed for whatever reason,
+ * allowing the client to attempt to re-open.
+ * 
+ * Note that there is currently no support to reuse a Server impl, a new one must be created.
  *
  */
 public class ConnectionClosedEvent extends GwtEvent<ConnectionClosedHandler> {
@@ -41,9 +44,20 @@ public class ConnectionClosedEvent extends GwtEvent<ConnectionClosedHandler> {
 	protected void dispatch(ConnectionClosedHandler handler) {
 		handler.onConnectionClosed(this);
 	}
+
+	/**
+	 * EventHandler interface for {@link ConnectionClosedEvent}.
+	 *
+	 */
 	public interface ConnectionClosedHandler extends EventHandler {
 		void onConnectionClosed(ConnectionClosedEvent event);
 	}
+
+	/**
+	 * Objects implementing this are advertising that they will fire {@link ConnectionClosedEvent}s
+	 * to {@link ConnectionClosedHandler}s.
+	 *
+	 */
 	public interface HasConnectionClosedHandlers {
 		HandlerRegistration addConnectionClosedHandler(ConnectionClosedHandler handler);
 	}

@@ -23,7 +23,8 @@ import com.google.gwt.event.shared.GwtEvent;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
 /**
- * @author colin
+ * Event fired to indicate that a WebSocket connection has been opened, and messages
+ * may now be sent to the server.
  *
  */
 public class ConnectionOpenedEvent extends GwtEvent<ConnectionOpenedHandler> {
@@ -42,10 +43,19 @@ public class ConnectionOpenedEvent extends GwtEvent<ConnectionOpenedHandler> {
 		handler.onConnectionOpened(this);
 	}
 
+	/**
+	 * EventHandler interface for {@link ConnectionOpenedEvent}.
+	 *
+	 */
 	public interface ConnectionOpenedHandler extends EventHandler {
 		void onConnectionOpened(ConnectionOpenedEvent event);
 	}
 
+	/**
+	 * Objects implementing this are advertising that they will fire {@link ConnectionOpenedEvent}s
+	 * to {@link ConnectionOpenedHandler}s.
+	 *
+	 */
 	public interface HasConnectionOpenedHandlers {
 		HandlerRegistration addConnectionOpenedHandler(ConnectionOpenedHandler handler);
 	}

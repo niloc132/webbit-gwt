@@ -19,7 +19,7 @@ package org.webbitserver.gwt.shared.impl;
 import com.google.gwt.user.client.rpc.RemoteService;
 
 /**
- * @author colin
+ * Dummy service interface used to convince RPC internals that a real RPC call is being made.
  *
  */
 public interface WebbitService extends RemoteService {

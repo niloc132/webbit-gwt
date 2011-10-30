@@ -44,7 +44,9 @@ import com.google.gwt.user.rebind.rpc.SerializableTypeOracleBuilder;
 import com.google.gwt.user.rebind.rpc.TypeSerializerCreator;
 
 /**
- * @author colin
+ * Generator for the {@link Server} interface. Builds client-side objects that can be used
+ * to contact and run methods on the server, and can allow client methods to be invoked from
+ * that server.
  *
  */
 public class WebbitServerGenerator extends Generator {

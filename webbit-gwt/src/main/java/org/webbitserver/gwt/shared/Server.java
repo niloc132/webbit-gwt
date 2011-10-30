@@ -22,7 +22,12 @@ import org.webbitserver.WebSocketConnection;
  * Basic server interface, to be extended to indicate that methods may be invoked by the client.
  * A server implementation must be provided to a GwtWebService, along with the class object for
  * the matching client.
- *
+ * 
+ * On the client, a Server implementation can be obtained using GWT.create, and a matching Client
+ * implementation must be provided or messages sent from the server will be ignored.
+ * 
+ * @see Client
+ * 
  */
 public interface Server<S extends Server<S,C>, C extends Client<C,S>> {
 	/**

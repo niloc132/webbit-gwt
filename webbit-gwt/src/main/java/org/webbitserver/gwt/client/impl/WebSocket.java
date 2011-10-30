@@ -19,7 +19,7 @@ package org.webbitserver.gwt.client.impl;
 import com.google.gwt.core.client.JavaScriptObject;
 
 /**
- * Simple JSO wrapper the WebSocket object
+ * Simple JSO wrapper the WebSocket object.
  *
  */
 public class WebSocket extends JavaScriptObject {

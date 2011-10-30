@@ -20,7 +20,7 @@ import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
- * @author colin
+ * Dummy async interface used to convince RPC internals that a real RPC call is being made.
  *
  */
 public interface WebbitServiceAsync {

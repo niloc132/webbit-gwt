@@ -33,7 +33,11 @@ import com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter;
 import com.google.gwt.user.client.rpc.impl.Serializer;
 
 /**
- * Simple impl of what the client thinks of the server as able to do.
+ * Simple impl of what the client thinks of the server as able to do. Used as a base class for
+ * generated server impls, should not be directly referenced in client code.
+ * 
+ * Some method names in this class are prefixed with "__" to ensure that they will not collide 
+ * with actual methods on the server.
  *
  */
 public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> implements Server<S, C> {
@@ -41,7 +45,9 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	private final WebSocket connection;
 
 	/**
+	 * Creates a server impl, communicating with the host page's server, on the given path.
 	 * 
+	 * @param path absolute path to use to communicate with the server
 	 */
 	public ServerImpl(String path) {
 		String server = Window.Location.getHost();
@@ -75,11 +81,24 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		});
 	}
 
+	/**
+	 * Provides an instance of a Serializer that can be used to send and receive messages.
+	 * 
+	 * @return a custom serializer for the current Server/Client pair.
+	 */
 	protected abstract Serializer __getSerializer();
 
+	/**
+	 * Internal method to handle incoming messages and to push them through to the current
+	 * Client instance after deserialization.
+	 * 
+	 * @param message incoming message
+	 * @throws SerializationException thrown if the client is unable to handle the message sent 
+	 * by the server
+	 */
 	private void __onMessage(String message) throws SerializationException {
 		__checkClient();
-		assert message.startsWith("//OK");//consider axing this , and the substring below
+		assert message.startsWith("//OK");//consider axing this, and the substring below
 		ClientSerializationStreamReader clientSerializationStreamReader = new ClientSerializationStreamReader(__getSerializer());
 		clientSerializationStreamReader.prepareToRead(message.substring(4));
 
@@ -87,26 +106,51 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		__invoke(decodedMessage.getMethod(), decodedMessage.getParameters());
 	}
 
-	protected void __sendMessage(String methodName, Object...params ) {
+	/**
+	 * Serializes and send a message to the server based on a method invocation made.
+	 * 
+	 * @param methodName
+	 * @param params
+	 */
+	protected void __sendMessage(String methodName, Object... params) {
 		ServerInvocation invoke = new ServerInvocation(methodName, params);
 
 		AbstractSerializationStreamWriter writer = new ClientSerializationStreamWriter(__getSerializer(), "", "");
+		// manually prepare to serialize a method call to keep the server side simpler
 		writer.prepareToWrite();
-		writer.writeString("org.webbitserver.gwt.shared.impl.WebbitService");
-		writer.writeString("dummy");
-		writer.writeInt(1);
+		writer.writeString("org.webbitserver.gwt.shared.impl.WebbitService");//interface
+		writer.writeString("dummy");//method name
+		writer.writeInt(1);//param count
 
-		writer.writeString("org.webbitserver.gwt.shared.impl.ServerInvocation");
+		writer.writeString("org.webbitserver.gwt.shared.impl.ServerInvocation");//param type
 
 		try {
+			// actually encode the object to send
 			writer.writeObject(invoke);
 		} catch (SerializationException e) {
+			// report the error, then throw an exception. This is too important of an error to
+			// let it be ignored
 			__onError(e);
+
+			throw new RuntimeException(e);
 		}
+
+		// send the message over the wire
 		__getConnection().sendMessage(writer.toString());
 	}
 
+	/**
+	 * Method to be replaced in actual implementation by the equivelent of 
+	 * method.invoke(this, params), based on the known possible methods that can be run.
+	 * @param method
+	 * @param params
+	 */
 	protected abstract void __invoke(String method, Object[] params);
+
+	/**
+	 * Allows for some error handling to be implemented in user code. Currently unused.
+	 * @param error
+	 */
 	protected abstract void __onError(Exception error);
 
 	public final WebSocket __getConnection() {
@@ -115,7 +159,6 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 
 	@Override
 	public final void setClient(C client) {
-		//TODO open or close connection here?
 		this.client = client;
 	}
 	@Override

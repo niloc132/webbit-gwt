@@ -21,7 +21,11 @@ import org.webbitserver.gwt.shared.Client;
 import org.webbitserver.gwt.shared.Server;
 
 /**
- * Simple starting point for implementing a set of calls reachable from a webbit-gwt client
+ * Simple starting point for implementing a set of calls reachable from a webbit-gwt client.
+ * Provides thread local access to the current Client impl for any given method invocation
+ * through setClient and getClient.
+ * 
+ * The methods onOpen and onClose have default implementations that do nothing.
  *
  */
 public abstract class AbstractServerImpl<S extends Server<S,C>, C extends Client<C,S>> implements Server<S, C> {
@@ -29,10 +33,12 @@ public abstract class AbstractServerImpl<S extends Server<S,C>, C extends Client
 
 	@Override
 	public void onOpen(WebSocketConnection connection, C client) throws Exception {
+		// default empty implementation to allow clients to define this only if desired
 	}
 
 	@Override
 	public void onClose(WebSocketConnection connection, C client) throws Exception {
+		// default empty implementation to allow clients to define this only if desired
 	}
 
 	@Override

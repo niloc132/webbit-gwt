@@ -21,10 +21,6 @@ import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamReader;
 import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 
-/**
- * @author colin
- *
- */
 public class ServerInvocation_CustomFieldSerializer extends CustomFieldSerializer<ServerInvocation> {
 	@Override
 	public void deserializeInstance(SerializationStreamReader streamReader, ServerInvocation instance) throws SerializationException {

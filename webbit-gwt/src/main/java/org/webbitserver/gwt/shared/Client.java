@@ -17,14 +17,12 @@
 package org.webbitserver.gwt.shared;
 
 /**
- * Starting interface for building the methods the server may call on the client.
+ * Starting interface for building the methods the server may call on the client. User code may
+ * provide an instance of this type to a Server instance created using GWT.create, and Client
+ * instances will be created automatically on the server as connections are created.
  * 
- * interface MyServer extends Client<MyServer,MyClient> {
- * }
- * interface MyClient extends Client<MyClient,MyServer> {
- * }
+ * @see Server
  * 
- *
  */
 public interface Client<C extends Client<C,S>, S extends Server<S,C>> {
 

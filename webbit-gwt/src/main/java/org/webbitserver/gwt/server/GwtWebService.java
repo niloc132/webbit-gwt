@@ -38,7 +38,13 @@ import com.google.gwt.user.server.rpc.SerializationPolicy;
 import com.google.gwt.user.server.rpc.SerializationPolicyProvider;
 
 /**
- * @author colin
+ * Web Socket handler designed to talk to a GWT client, passing messages back and forth using the
+ * RPC message format.
+ * 
+ * The two interfaces {@link Client} and {@link Server} are at the heart of this. User code must
+ * create subinterfaces to declare the contract between the client and server, and must make the
+ * relationship between these two clear using generics so both client and server code are able to
+ * pass messages correctly.
  *
  */
 public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> implements WebSocketHandler {
@@ -58,6 +64,13 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 
 	private final Map<String, Method> cachedMethods = Collections.synchronizedMap(new HashMap<String, Method>());
 
+	/**
+	 * Creates a new service instance, making method calls to the given server instance, and 
+	 * able to send method calls to the client of the given type.
+	 * 
+	 * @param server
+	 * @param client
+	 */
 	public GwtWebService(S server, Class<C> client) {
 		this.server = server;
 		this.client = client;
