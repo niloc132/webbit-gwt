@@ -37,6 +37,7 @@ import com.google.gwt.core.ext.typeinfo.JParameter;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.dev.util.Name;
 import com.google.gwt.editor.rebind.model.ModelUtils;
+import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import com.google.gwt.user.client.rpc.impl.Serializer;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
@@ -79,8 +80,14 @@ public class WebbitServerGenerator extends Generator {
 
 		SourceWriter sw = factory.createSourceWriter(context, pw);
 
+		RemoteServiceRelativePath path = toGenerate.getAnnotation(RemoteServiceRelativePath.class);
+		if (path == null) {
+			logger.log(Type.ERROR, "@RemoteServiceRelativePath required on " + typeName + " to make a connection to the server.");
+			throw new UnableToCompleteException();
+		}
+
 		sw.println("public %1$s() {", simpleName);
-		sw.indentln("super(\"/chat\");");//TODO replace with data from annotation or something
+		sw.indentln("super(\"%1$s\");", path.value());
 		sw.println("}");
 
 		//Find all types that may go over the wire

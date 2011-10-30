@@ -26,6 +26,9 @@ import org.webbitserver.WebSocketConnection;
  * On the client, a Server implementation can be obtained using GWT.create, and a matching Client
  * implementation must be provided or messages sent from the server will be ignored.
  * 
+ * Must be annotated with {@link com.google.gwt.user.client.rpc.RemoteServiceRelativePath} to
+ * indicate where this resource can be found on the server.
+ * 
  * @see Client
  * 
  */

@@ -18,10 +18,13 @@ package samples.easychatroom.shared;
 
 import org.webbitserver.gwt.shared.Server;
 
+import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
+
 /**
  * Simple example of methods a server can have that can be invoked by a client.
  *
  */
+@RemoteServiceRelativePath("/chat")
 public interface ChatServer extends Server<ChatServer, ChatClient> {
 	/**
 	 * Brings the user into the chat room, with the given username
