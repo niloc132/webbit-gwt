@@ -91,6 +91,16 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 	}
 
 	@Override
+	public void onPong(WebSocketConnection connection, String msg) throws Throwable {
+		//no-op for now
+	}
+
+	@Override
+	public void onMessage(WebSocketConnection connection, byte[] msg) throws Throwable {
+		//no-op for uploading binary data
+	}
+
+	@Override
 	public void onMessage(WebSocketConnection connection, String msg) throws Throwable {
 		RPCRequest req = RPC.decodeRequest(msg, null, makeProvider());
 		//Method m = req.getMethod();//garbage
