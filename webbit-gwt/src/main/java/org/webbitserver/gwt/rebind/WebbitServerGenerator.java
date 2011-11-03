@@ -87,7 +87,7 @@ public class WebbitServerGenerator extends Generator {
 		}
 
 		sw.println("public %1$s() {", simpleName);
-		sw.indentln("super(\"%1$s\");", path.value());
+		sw.indentln("super(\"ws://\", com.google.gwt.user.client.Window.Location.getHost(), \"%1$s\");", path.value());
 		sw.println("}");
 
 		//Find all types that may go over the wire
@@ -148,8 +148,14 @@ public class WebbitServerGenerator extends Generator {
 		return factory.getCreatedClassName();
 	}
 
-	private void appendMethodParameters(TreeLogger logger,
-			JClassType toGenerate,
+	/**
+	 * Helper method to build up the list of types that can go over the wire
+	 * @param logger
+	 * @param toGenerate
+	 * @param superClass
+	 * @param clientSerializerBuilder
+	 */
+	private void appendMethodParameters(TreeLogger logger, JClassType toGenerate,
 			Class<?> superClass, SerializableTypeOracleBuilder clientSerializerBuilder) {
 		for (JMethod m : toGenerate.getMethods()) {
 			if (isRemoteMethod(m, superClass)) {
@@ -184,7 +190,11 @@ public class WebbitServerGenerator extends Generator {
 	}
 
 	/**
-	 * @param m
+	 * Checks to see if the given method can be called over the wire.
+	 * 
+	 * 
+	 * @param m method to check
+	 * @param superClass either {@link Server} or {@link Client}, indicating which direction the call will be made
 	 * @return
 	 */
 	private boolean isRemoteMethod(JMethod m, Class<?> superClass) {

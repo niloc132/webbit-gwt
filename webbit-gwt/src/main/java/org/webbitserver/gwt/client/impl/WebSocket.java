@@ -33,8 +33,8 @@ public class WebSocket extends JavaScriptObject {
 		void onError(JavaScriptObject error);
 	}
 
-	public static native WebSocket create(String server, String path, Callback callback) /*-{
-		var ws = new $wnd.WebSocket('ws://' + server + path);
+	public static native WebSocket create(String url, Callback callback) /*-{
+		var ws = new $wnd.WebSocket(url);
 		ws.onopen = $entry(function(){callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onOpen()()});
 		ws.onclose = $entry(function(){callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onClose()()});
 		ws.onmessage = $entry(function(e) {

@@ -25,7 +25,6 @@ import org.webbitserver.gwt.shared.impl.ServerInvocation;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamWriter;
 import com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader;
@@ -49,9 +48,8 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	 * 
 	 * @param path absolute path to use to communicate with the server
 	 */
-	public ServerImpl(String path) {
-		String server = Window.Location.getHost();
-		connection = WebSocket.create(server, path, new WebSocket.Callback() {
+	public ServerImpl(String url) {
+		connection = WebSocket.create(url, new WebSocket.Callback() {
 			@Override
 			public void onOpen() {
 				C client = __checkClient();
@@ -79,6 +77,10 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 				ServerImpl.this.__onError(new JavaScriptException(error));
 			}
 		});
+	}
+
+	public ServerImpl(String protocol, String server, String path) {
+		this(protocol + server + path);
 	}
 
 	/**
