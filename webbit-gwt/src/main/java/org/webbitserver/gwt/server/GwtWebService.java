@@ -142,11 +142,11 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 			}
 			@Override
 			public boolean shouldSerializeFields(Class<?> clazz) {
-				return true;
+				return clazz != null;
 			}
 			@Override
 			public boolean shouldDeserializeFields(Class<?> clazz) {
-				return true;
+				return clazz != null;
 			}
 		};
 	}
