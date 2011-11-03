@@ -18,6 +18,7 @@ package samples.easychatroom.client;
 
 import org.webbitserver.gwt.client.ConnectionOpenedEvent;
 import org.webbitserver.gwt.client.ConnectionOpenedEvent.ConnectionOpenedHandler;
+import org.webbitserver.gwt.client.ServerBuilder;
 
 import samples.easychatroom.shared.ChatServer;
 
@@ -33,10 +34,15 @@ import com.google.gwt.user.client.ui.RootLayoutPanel;
  *
  */
 public class SampleEntryPoint implements EntryPoint {
+	interface ChatServerBuilder extends ServerBuilder<ChatServer> {}
 
 	@Override
 	public void onModuleLoad() {
-		final ChatServer server = GWT.create(ChatServer.class);
+		//final ChatServer server = GWT.create(ChatServer.class);
+		final ChatServerBuilder builder = GWT.create(ChatServerBuilder.class);
+		builder.setUrl("ws://" + Window.Location.getHost() + "/chat");
+
+		final ChatServer server = builder.start();
 
 		final ChatClientWidget impl = new ChatClientWidget();
 		server.setClient(impl);
