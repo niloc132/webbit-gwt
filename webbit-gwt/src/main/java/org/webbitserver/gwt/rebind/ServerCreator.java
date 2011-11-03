@@ -98,7 +98,7 @@ public class ServerCreator {
 		serverSerializerBuilder.addRootType(logger, oracle.findType(ClientInvocation.class.getName()));
 
 		SerializableTypeOracleBuilder clientSerializerBuilder = new SerializableTypeOracleBuilder(logger, context.getPropertyOracle(), (GeneratorContextExt) context);
-		appendMethodParameters(logger, this.serverType, Server.class, clientSerializerBuilder);
+		appendMethodParameters(logger, clientType, Server.class, clientSerializerBuilder);
 		clientSerializerBuilder.addRootType(logger, oracle.findType(ServerInvocation.class.getName()));
 
 		String tsName = simpleName + "_TypeSerializer";
