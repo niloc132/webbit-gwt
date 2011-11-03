@@ -94,7 +94,7 @@ public class ServerBuilderGenerator extends Generator {
 
 		sw.commit(logger);
 
-		return creator.getQualifiedSourceName();
+		return factory.getCreatedClassName();
 
 	}
 
