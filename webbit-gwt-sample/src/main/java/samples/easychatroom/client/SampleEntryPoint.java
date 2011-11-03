@@ -37,6 +37,7 @@ public class SampleEntryPoint implements EntryPoint {
 	@Override
 	public void onModuleLoad() {
 		final ChatServer server = GWT.create(ChatServer.class);
+		
 
 		final ChatClientWidget impl = new ChatClientWidget();
 		server.setClient(impl);
