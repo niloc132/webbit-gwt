@@ -19,6 +19,7 @@ package org.webbitserver.gwt.rebind;
 import java.io.PrintWriter;
 
 import org.webbitserver.gwt.client.ServerBuilder;
+import org.webbitserver.gwt.client.impl.ServerBuilderImpl;
 
 import com.google.gwt.core.ext.Generator;
 import com.google.gwt.core.ext.GeneratorContext;
@@ -27,7 +28,9 @@ import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
+import com.google.gwt.dev.util.Name;
 import com.google.gwt.editor.rebind.model.ModelUtils;
+import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
 
@@ -63,26 +66,25 @@ public class ServerBuilderGenerator extends Generator {
 		}
 
 		ClassSourceFileComposerFactory factory = new ClassSourceFileComposerFactory(packageName, simpleName);
+		factory.setSuperclass(Name.getSourceNameForClass(ServerBuilderImpl.class) + "<" + serverImplType.getQualifiedSourceName() + ">");
 		factory.addImplementedInterface(typeName);
 
 		SourceWriter sw = factory.createSourceWriter(context, pw);
 
-		//private var for url
-		//TODO will need more vars for complete url building
-		sw.println("private String url = null;");
 
+		RemoteServiceRelativePath path = serverImplType.getAnnotation(RemoteServiceRelativePath.class);
+		if (path != null) {
+			sw.println("public %1$s() {", simpleName);
+			sw.indentln("setPath(\"%1$s\");", path.value());
+			sw.println("}");
+		}
 
-		// setUrl method
-		sw.println("public %1$s setUrl(String url) {", typeName);
-		sw.indentln("this.url = url;");
-		sw.indentln("return this;");
-		sw.println("}");
 
 		sw.println();
 		// start method
 		sw.println("public %1$s start() {", serverImplType.getQualifiedSourceName());
 		sw.indent();
-
+		sw.println("String url = getUrl();");
 		sw.println("if (url == null) {");
 		sw.indentln("return new %1$s();", creator.getQualifiedSourceName());
 		sw.println("} else {");
