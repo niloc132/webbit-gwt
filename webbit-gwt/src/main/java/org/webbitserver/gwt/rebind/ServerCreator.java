@@ -93,12 +93,16 @@ public class ServerCreator {
 		sw.println("}");
 
 		//Find all types that may go over the wire
+		// Collect the types the server will send to the client using the Client interface
 		SerializableTypeOracleBuilder serverSerializerBuilder = new SerializableTypeOracleBuilder(logger, context.getPropertyOracle(), (GeneratorContextExt) context);
-		appendMethodParameters(logger, this.serverType, Client.class, serverSerializerBuilder);
+		appendMethodParameters(logger, clientType, Client.class, serverSerializerBuilder);
+		// Also add the wrapper object ClientInvocation
 		serverSerializerBuilder.addRootType(logger, oracle.findType(ClientInvocation.class.getName()));
 
+		// Collect the types the client will send to the server using the Server interface
 		SerializableTypeOracleBuilder clientSerializerBuilder = new SerializableTypeOracleBuilder(logger, context.getPropertyOracle(), (GeneratorContextExt) context);
-		appendMethodParameters(logger, clientType, Server.class, clientSerializerBuilder);
+		appendMethodParameters(logger, this.serverType, Server.class, clientSerializerBuilder);
+		// Also add the ServerInvocation wrapper
 		clientSerializerBuilder.addRootType(logger, oracle.findType(ServerInvocation.class.getName()));
 
 		String tsName = simpleName + "_TypeSerializer";
@@ -164,16 +168,17 @@ public class ServerCreator {
 	/**
 	 * Helper method to build up the list of types that can go over the wire
 	 * @param logger
-	 * @param toGenerate
-	 * @param superClass
-	 * @param clientSerializerBuilder
+	 * @param serviceInterface
+	 * @param serviceSuperClass
+	 * @param serializerBuilder
 	 */
-	private void appendMethodParameters(TreeLogger logger, JClassType toGenerate,
-			Class<?> superClass, SerializableTypeOracleBuilder clientSerializerBuilder) {
-		for (JMethod m : toGenerate.getMethods()) {
-			if (isRemoteMethod(m, superClass)) {
+	private void appendMethodParameters(TreeLogger logger, JClassType serviceInterface,
+			Class<?> serviceSuperClass, SerializableTypeOracleBuilder serializerBuilder) {
+		TreeLogger l = logger.branch(Type.DEBUG, "Adding params types to " + serviceInterface.getName());
+		for (JMethod m : serviceInterface.getMethods()) {
+			if (isRemoteMethod(m, serviceSuperClass)) {
 				for (JParameter param : m.getParameters()) {
-					clientSerializerBuilder.addRootType(logger, param.getType());
+					serializerBuilder.addRootType(l, param.getType());
 				}
 			}
 		}
