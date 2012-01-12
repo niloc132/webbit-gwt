@@ -32,6 +32,11 @@ import com.google.web.bindery.event.shared.HandlerRegistration;
  */
 public abstract class AbstractClientImpl<C extends Client<C,S>, S extends Server<S,C>> implements Client<C, S>, HasConnectionOpenedHandlers, HasConnectionClosedHandlers {
 	private final HandlerManager handlerManager = new HandlerManager(this);
+	
+	protected HandlerManager getHandlerManager() {
+		return handlerManager;
+	}
+	
 	@Override
 	public void onOpen() {
 		handlerManager.fireEvent(new ConnectionOpenedEvent());
