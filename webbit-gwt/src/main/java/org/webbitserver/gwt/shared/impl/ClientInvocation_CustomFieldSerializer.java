@@ -45,9 +45,13 @@ public class ClientInvocation_CustomFieldSerializer extends CustomFieldSerialize
 
 	public static void serialize(SerializationStreamWriter streamWriter,ClientInvocation instance) throws SerializationException {
 		streamWriter.writeString(instance.getMethod());
-		streamWriter.writeInt(instance.getParameters().length);
-		for (Object param : instance.getParameters()) {
-			streamWriter.writeObject(param);
+		if (instance.getParameters() == null) {
+			streamWriter.writeInt(0);
+		} else {
+			streamWriter.writeInt(instance.getParameters().length);
+			for (Object param : instance.getParameters()) {
+				streamWriter.writeObject(param);
+			}
 		}
 	}
 }
