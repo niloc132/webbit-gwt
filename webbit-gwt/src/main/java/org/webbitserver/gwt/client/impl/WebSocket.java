@@ -34,7 +34,7 @@ public class WebSocket extends JavaScriptObject {
 	}
 
 	public static native WebSocket create(String url, Callback callback) /*-{
-		var ws = new $wnd.WebSocket(url);
+		var ws = (!!$wnd.WebSocket) ? new $wnd.WebSocket(url) : $wnd.MozWebSocket(url);
 		ws.onopen = $entry(function(){callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onOpen()()});
 		ws.onclose = $entry(function(){callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onClose()()});
 		ws.onmessage = $entry(function(e) {
