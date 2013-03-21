@@ -12,44 +12,6 @@
 		<gwt.plugin.version>2.3.0</gwt.plugin.version>
 	</properties>
 		
-	<distributionManagement>
-		<repository>
-			<id>archiva.internal</id>
-			<name>Internal Release Repository</name>
-			<url>dav:http://192.168.1.6:8008/archiva/repository/internal</url>
-		</repository>
-		<snapshotRepository>
-			<id>archiva.snapshots</id>
-			<name>Internal Snapshot Repository</name>
-			<url>dav:http://192.168.1.6:8008/archiva/repository/snapshots</url>
-		</snapshotRepository>
-	</distributionManagement>
-	
-		<repositories>
-		<repository>
-			<id>snapshots</id>
-			<name>Archiva Managed Snapshot Repository</name>
-			<url>http://192.168.1.6:8008/archiva/repository/snapshots/</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>internal</id>
-			<name>Archiva Managed Internal Repository</name>
-			<url>http://192.168.1.6:8008/archiva/repository/internal/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-	
 	<dependencyManagement>
 		<dependencies>
 			<!-- Based on Webbit client-server communication lib -->
