@@ -8,8 +8,8 @@
 	<name>Webbit GWT Parent Project</name>
 	<properties>
 		<webbit.version>0.2.10</webbit.version>
-		<gwt.version>2.4.0</gwt.version>
-		<gwt.plugin.version>2.3.0</gwt.plugin.version>
+		<gwt.version>2.5.1</gwt.version>
+		<gwt.plugin.version>2.5.1</gwt.plugin.version>
 	</properties>
 		
 	<dependencyManagement>
@@ -85,19 +85,8 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
-		
-		<extensions>
-			<!-- begin - needed for deploying to repository using webdav -->
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-webdav-jackrabbit</artifactId>
-				<version>1.0-beta-7</version>
-			</extension>
-			<!-- end - needed for deploying to repository using webdav -->
-		</extensions>
 	</build>
-	
-	
+
 	<modules>
 		<module>webbit-gwt</module>
 		<module>webbit-gwt-sample</module>

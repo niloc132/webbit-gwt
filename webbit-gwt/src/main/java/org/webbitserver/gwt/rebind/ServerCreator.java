@@ -26,7 +26,6 @@ import org.webbitserver.gwt.shared.impl.ServerInvocation;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.ext.GeneratorContext;
-import com.google.gwt.core.ext.GeneratorContextExt;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
@@ -94,19 +93,19 @@ public class ServerCreator {
 
 		//Find all types that may go over the wire
 		// Collect the types the server will send to the client using the Client interface
-		SerializableTypeOracleBuilder serverSerializerBuilder = new SerializableTypeOracleBuilder(logger, context.getPropertyOracle(), (GeneratorContextExt) context);
+		SerializableTypeOracleBuilder serverSerializerBuilder = new SerializableTypeOracleBuilder(logger, context.getPropertyOracle(), context);
 		appendMethodParameters(logger, clientType, Client.class, serverSerializerBuilder);
 		// Also add the wrapper object ClientInvocation
 		serverSerializerBuilder.addRootType(logger, oracle.findType(ClientInvocation.class.getName()));
 
 		// Collect the types the client will send to the server using the Server interface
-		SerializableTypeOracleBuilder clientSerializerBuilder = new SerializableTypeOracleBuilder(logger, context.getPropertyOracle(), (GeneratorContextExt) context);
+		SerializableTypeOracleBuilder clientSerializerBuilder = new SerializableTypeOracleBuilder(logger, context.getPropertyOracle(), context);
 		appendMethodParameters(logger, this.serverType, Server.class, clientSerializerBuilder);
 		// Also add the ServerInvocation wrapper
 		clientSerializerBuilder.addRootType(logger, oracle.findType(ServerInvocation.class.getName()));
 
 		String tsName = simpleName + "_TypeSerializer";
-		TypeSerializerCreator serializerCreator = new TypeSerializerCreator(logger, clientSerializerBuilder.build(logger), serverSerializerBuilder.build(logger), (GeneratorContextExt) context, packageName + "." + tsName, tsName);
+		TypeSerializerCreator serializerCreator = new TypeSerializerCreator(logger, clientSerializerBuilder.build(logger), serverSerializerBuilder.build(logger), context, packageName + "." + tsName, tsName);
 		serializerCreator.realize(logger);
 
 		// Make the newly created Serializer available at runtime
