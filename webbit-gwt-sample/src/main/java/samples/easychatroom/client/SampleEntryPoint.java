@@ -16,6 +16,7 @@
  */
 package samples.easychatroom.client;
 
+import org.webbitserver.gwt.client.ConnectionClosedEvent;
 import org.webbitserver.gwt.client.ConnectionOpenedEvent;
 import org.webbitserver.gwt.client.ConnectionOpenedEvent.ConnectionOpenedHandler;
 import org.webbitserver.gwt.client.ServerBuilder;
@@ -38,20 +39,43 @@ public class SampleEntryPoint implements EntryPoint {
 
 	@Override
 	public void onModuleLoad() {
+		// We can't GWT.create the server itself, instead, we need a builder
 		//final ChatServer server = GWT.create(ChatServer.class);
 		final ChatServerBuilder builder = GWT.create(ChatServerBuilder.class);
-		builder.setUrl("ws://" + Window.Location.getHost() + "/chat");
 
+		// Set the url directly, or use the setHost, setPort, etc calls and
+		//use the @RemoteServiceRelativePath given on the interface
+//		builder.setUrl("ws://" + Window.Location.getHost() + "/chat");
+		builder.setHostname(Window.Location.getHostName());
+		builder.setPort(9876);
+
+		// Because this is just a demo, we're using Window.prompt to get a username
+		final String username = Window.prompt("Select a username", "");
+
+		// Start up the server connection, then plug into it so you get the callbacks
 		final ChatServer server = builder.start();
 
 		final ChatClientWidget impl = new ChatClientWidget();
 		server.setClient(impl);
 
+		// This listens for the connection to start, so we can log in with the username
+		// we already picked.
+		// Remember that you don't need to build this here, it could be in your client
+		// impl's onOpen method (and the next block in onClose).
 		impl.addConnectionOpenedHandler(new ConnectionOpenedHandler() {
 			@Override
 			public void onConnectionOpened(ConnectionOpenedEvent event) {
-				String username = Window.prompt("Select a username", "");
 				server.login(username);
+			}
+		});
+
+		// Then listen for close too, so we can do something about the lost connection.
+		impl.addConnectionClosedHandler(new ConnectionClosedEvent.ConnectionClosedHandler() {
+			@Override
+			public void onConnectionClosed(ConnectionClosedEvent event) {
+				// Take the easy/stupid way out and restart the page!
+				// This will stop at the prompt and wait for a username before connecting
+				Window.Location.reload();
 			}
 		});
 

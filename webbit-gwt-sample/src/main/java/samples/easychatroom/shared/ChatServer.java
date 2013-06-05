@@ -28,13 +28,13 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 public interface ChatServer extends Server<ChatServer, ChatClient> {
 	/**
 	 * Brings the user into the chat room, with the given username
-	 * @param username
+	 * @param username the name to use
 	 */
 	void login(String username);
 
 	/**
 	 * Sends the given message to the chatroom
-	 * @param message
+	 * @param message the message to say to the room
 	 */
 	void say(String message);
 }
