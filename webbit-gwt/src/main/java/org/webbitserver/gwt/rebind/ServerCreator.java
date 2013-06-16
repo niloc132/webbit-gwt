@@ -18,6 +18,7 @@ package org.webbitserver.gwt.rebind;
 
 import java.io.PrintWriter;
 
+import org.webbitserver.gwt.client.ServerBuilder.ConnectionErrorHandler;
 import org.webbitserver.gwt.client.impl.ServerImpl;
 import org.webbitserver.gwt.shared.Client;
 import org.webbitserver.gwt.shared.Server;
@@ -82,13 +83,13 @@ public class ServerCreator {
 			logger.log(Type.WARN, "@RemoteServiceRelativePath required on " + typeName + " to make a connection to the server without a ServerBuilder");
 			throw new UnableToCompleteException();
 		} else {
-			sw.println("public %1$s() {", simpleName);
-			sw.indentln("super(\"ws://\", com.google.gwt.user.client.Window.Location.getHost(), \"%1$s\");", path.value());
+			sw.println("public %1$s(%2$s errorHandler) {", simpleName, Name.getSourceNameForClass(ConnectionErrorHandler.class));
+			sw.indentln("super(errorHandler, \"ws://\", com.google.gwt.user.client.Window.Location.getHost(), \"%1$s\");", path.value());
 			sw.println("}");
 		}
 
-		sw.println("public %1$s(String url) {", simpleName);
-		sw.indentln("super(url);");
+		sw.println("public %1$s(%2$s errorHandler, String url) {", simpleName, Name.getSourceNameForClass(ConnectionErrorHandler.class));
+		sw.indentln("super(errorHandler, url);");
 		sw.println("}");
 
 		//Find all types that may go over the wire

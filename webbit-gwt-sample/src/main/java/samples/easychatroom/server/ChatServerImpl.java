@@ -34,8 +34,7 @@ public class ChatServerImpl extends AbstractServerImpl<ChatServer, ChatClient> i
 	private final Map<ChatClient, String> loggedIn = Collections.synchronizedMap(new HashMap<ChatClient, String>());
 
 	@Override
-	public void onClose(WebSocketConnection connection, ChatClient client)
-	throws Exception {
+	public void onClose(WebSocketConnection connection, ChatClient client) {
 		String userName = loggedIn.remove(client);
 		if (userName == null) {
 			return;

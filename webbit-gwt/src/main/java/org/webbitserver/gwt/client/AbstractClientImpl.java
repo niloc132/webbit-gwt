@@ -23,6 +23,7 @@ import org.webbitserver.gwt.client.ConnectionOpenedEvent.HasConnectionOpenedHand
 import org.webbitserver.gwt.shared.Client;
 import org.webbitserver.gwt.shared.Server;
 
+import com.google.gwt.core.shared.GWT;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
@@ -45,6 +46,11 @@ public abstract class AbstractClientImpl<C extends Client<C,S>, S extends Server
 	@Override
 	public void onClose() {
 		handlerManager.fireEvent(new ConnectionClosedEvent());
+	}
+
+	@Override
+	public void onError(Throwable error) {
+		GWT.log("An error occurred when handling a message sent to the client, override onError to handle this in your Client implementation", error);
 	}
 
 	@Override

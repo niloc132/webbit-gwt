@@ -86,9 +86,9 @@ public class ServerBuilderGenerator extends Generator {
 		sw.indent();
 		sw.println("String url = getUrl();");
 		sw.println("if (url == null) {");
-		sw.indentln("return new %1$s();", creator.getQualifiedSourceName());
+		sw.indentln("return new %1$s(getErrorHandler());", creator.getQualifiedSourceName());
 		sw.println("} else {");
-		sw.indentln("return new %1$s(url);", creator.getQualifiedSourceName());
+		sw.indentln("return new %1$s(getErrorHandler(), url);", creator.getQualifiedSourceName());
 		sw.println("}");
 
 		sw.outdent();

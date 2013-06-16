@@ -38,23 +38,23 @@ public interface Server<S extends Server<S,C>, C extends Client<C,S>> {
 	 * by the client.
 	 * @param connection
 	 * @param client
-	 * @throws Exception
 	 */
-	void onOpen(WebSocketConnection connection, C client) throws Exception;
+	void onOpen(WebSocketConnection connection, C client);
 
 	/**
 	 * Called as a client connection is lost. Not to be invoked directly by the client.
 	 * 
 	 * @param connection
 	 * @param client
-	 * @throws Exception
 	 */
-	void onClose(WebSocketConnection connection, C client) throws Exception;
+	void onClose(WebSocketConnection connection, C client);
+
+	void onError(Throwable error);
 
 	/**
 	 * Gets the client for the currently running request, if any. Should return the value last
 	 * passed to {@link #setClient(Client)} (if on the server, within the current thread).
-	 * @return
+	 * @return the current client object in use
 	 */
 	C getClient();
 
@@ -63,7 +63,7 @@ public interface Server<S extends Server<S,C>, C extends Client<C,S>> {
 	 * client instance is about to make a call. Called by the client to specify which client
 	 * instance should have messages forwarded to it.
 	 * 
-	 * @param client
+	 * @param client the client object to use on this server
 	 */
 	void setClient(C client);
 }

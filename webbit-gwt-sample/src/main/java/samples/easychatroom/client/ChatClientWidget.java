@@ -22,6 +22,7 @@ import samples.easychatroom.shared.ChatClient;
 import samples.easychatroom.shared.ChatServer;
 
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -70,6 +71,21 @@ public class ChatClientWidget extends AbstractClientImpl<ChatClient, ChatServer>
 	@Override
 	public void part(String username) {
 		addMessage(username + " has left");
+	}
+	@Override
+	public void onOpen() {
+		super.onOpen();
+		addMessage("You've joined the chat");
+	}
+	@Override
+	public void onClose() {
+		super.onClose();
+		addMessage("You've left the chat");
+	}
+	@Override
+	public void onError(Throwable error) {
+		super.onError(error);
+		Window.alert(error.getMessage());
 	}
 
 	protected void addMessage(String message) {

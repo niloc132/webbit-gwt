@@ -38,4 +38,5 @@ public interface Client<C extends Client<C,S>, S extends Server<S,C>> {
 	 */
 	void onClose();
 
+	void onError(Throwable error);
 }

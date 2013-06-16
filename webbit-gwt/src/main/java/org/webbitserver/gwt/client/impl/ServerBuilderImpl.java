@@ -29,12 +29,21 @@ import com.google.gwt.user.client.Window;
 public abstract class ServerBuilderImpl<S extends Server<S, ?>> implements ServerBuilder<S> {
 	private String url;
 	private UrlBuilder urlBuilder = Window.Location.createUrlBuilder();
+	private ConnectionErrorHandler errorHandler;
 
 	/**
 	 * 
 	 */
 	public ServerBuilderImpl() {
 		urlBuilder.setProtocol("https".equals(Window.Location.getProtocol()) ? "wss": "ws").setHash(null);
+	}
+
+	@Override
+	public void setConnectionErrorHandler(ConnectionErrorHandler errorHandler) {
+		this.errorHandler = errorHandler;
+	}
+	public ConnectionErrorHandler getErrorHandler() {
+		return errorHandler;
 	}
 
 	@Override

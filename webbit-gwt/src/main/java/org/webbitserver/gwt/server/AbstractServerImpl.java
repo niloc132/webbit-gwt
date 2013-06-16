@@ -32,13 +32,19 @@ public abstract class AbstractServerImpl<S extends Server<S,C>, C extends Client
 	private final ThreadLocal<C> currentClient = new ThreadLocal<C>();
 
 	@Override
-	public void onOpen(WebSocketConnection connection, C client) throws Exception {
+	public void onOpen(WebSocketConnection connection, C client) {
 		// default empty implementation to allow clients to define this only if desired
 	}
 
 	@Override
-	public void onClose(WebSocketConnection connection, C client) throws Exception {
+	public void onClose(WebSocketConnection connection, C client) {
 		// default empty implementation to allow clients to define this only if desired
+	}
+
+	@Override
+	public void onError(Throwable error) {
+		System.err.println("The following error occurred while executing a server method - override onError to prevent/replace this message");
+		error.printStackTrace();
 	}
 
 	@Override

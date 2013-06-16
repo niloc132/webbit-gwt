@@ -17,6 +17,7 @@
 package org.webbitserver.gwt.server;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
@@ -126,8 +127,14 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 		}
 
 		server.setClient((C)connection.data(getClass().getName() + ".client"));
-		method.invoke(server, invoke.getParameters());
-		server.setClient(null);
+		try {
+			method.invoke(server, invoke.getParameters());
+		} catch (InvocationTargetException ex) {
+			Throwable unwrapped = ex.getCause();
+			server.onError(unwrapped);
+		} finally {
+			server.setClient(null);
+		}
 	}
 
 	//TODO factor this out elsewhere, and replace with the real thing

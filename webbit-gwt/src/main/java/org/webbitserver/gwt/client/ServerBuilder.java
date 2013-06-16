@@ -78,4 +78,14 @@ public interface ServerBuilder<S extends Server<S, ?>> {
 	 * @return
 	 */
 	S start();
+
+	/**
+	 * Specifies a handler to receive errors when a problem occurs with the connection.
+	 * @param errorHandler the handler to send connection errors to
+	 */
+	void setConnectionErrorHandler(ConnectionErrorHandler errorHandler);
+
+	public interface ConnectionErrorHandler {
+		void onError(Exception ex);
+	}
 }

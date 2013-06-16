@@ -17,6 +17,7 @@
 package org.webbitserver.gwt.client.impl;
 
 import org.webbitserver.WebSocketConnection;
+import org.webbitserver.gwt.client.ServerBuilder.ConnectionErrorHandler;
 import org.webbitserver.gwt.shared.Client;
 import org.webbitserver.gwt.shared.Server;
 import org.webbitserver.gwt.shared.impl.ClientInvocation;
@@ -35,8 +36,8 @@ import com.google.gwt.user.client.rpc.impl.Serializer;
  * Simple impl of what the client thinks of the server as able to do. Used as a base class for
  * generated server impls, should not be directly referenced in client code.
  * 
- * Some method names in this class are prefixed with "__" to ensure that they will not collide 
- * with actual methods on the server.
+ * Some method names in this class are prefixed with "__" to ensure that they cannot collide
+ * with actual methods in the interface being implemented.
  *
  */
 public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> implements Server<S, C> {
@@ -48,7 +49,7 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	 * 
 	 * @param path absolute path to use to communicate with the server
 	 */
-	public ServerImpl(String url) {
+	public ServerImpl(final ConnectionErrorHandler errorHandler, String url) {
 		connection = WebSocket.create(url, new WebSocket.Callback() {
 			@Override
 			public void onOpen() {
@@ -69,18 +70,25 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 				try {
 					ServerImpl.this.__onMessage(data);
 				} catch (Exception e) {
-					ServerImpl.this.__onError(e);
+					onError(e);
+				}
+			}
+			private void onError(Exception e) {
+				if (errorHandler != null) {
+					errorHandler.onError(e);
+				} else {
+					GWT.log("A transport error occurred - pass a error handler to your server builder to handle this yourself", e);
 				}
 			}
 			@Override
 			public void onError(JavaScriptObject error) {
-				ServerImpl.this.__onError(new JavaScriptException(error));
+				onError(new JavaScriptException(error));
 			}
 		});
 	}
 
-	public ServerImpl(String protocol, String server, String path) {
-		this(protocol + server + path);
+	public ServerImpl(ConnectionErrorHandler errorHandler, String protocol, String server, String path) {
+		this(errorHandler, protocol + server + path);
 	}
 
 	/**
@@ -105,7 +113,11 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		clientSerializationStreamReader.prepareToRead(message.substring(4));
 
 		ClientInvocation decodedMessage = (ClientInvocation) clientSerializationStreamReader.readObject();
-		__invoke(decodedMessage.getMethod(), decodedMessage.getParameters());
+		try {
+			__invoke(decodedMessage.getMethod(), decodedMessage.getParameters());
+		} catch (Exception ex) {
+			getClient().onError(ex);
+		}
 	}
 
 	/**
@@ -142,7 +154,7 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	}
 
 	/**
-	 * Method to be replaced in actual implementation by the equivelent of 
+	 * Method to be replaced in actual implementation by the equivalent of
 	 * method.invoke(this, params), based on the known possible methods that can be run.
 	 * @param method
 	 * @param params
@@ -150,10 +162,14 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	protected abstract void __invoke(String method, Object[] params);
 
 	/**
-	 * Allows for some error handling to be implemented in user code. Currently unused.
-	 * @param error
+	 * Allows for some error handling to be implemented in user code.
+	 * @param error the error that was found
 	 */
-	protected abstract void __onError(Exception error);
+	protected void __onError(Exception error) {
+		if (getClient() != null) {
+			getClient().onError(error);
+		}
+	}
 
 	public final WebSocket __getConnection() {
 		return connection;
@@ -176,11 +192,16 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	}
 
 	@Override
-	public final void onOpen(WebSocketConnection connection, C client) throws Exception {
+	public final void onOpen(WebSocketConnection connection, C client) {
 		throw new UnsupportedOperationException("Cannot be called from client code");
 	}
 	@Override
-	public final void onClose(WebSocketConnection connection, C client) throws Exception {
+	public final void onClose(WebSocketConnection connection, C client) {
 		throw new UnsupportedOperationException("Cannot be called from client code");
 	}
+	@Override
+	public void onError(Throwable error) {
+		throw new UnsupportedOperationException("Cannot be called from client code");
+	}
+
 }
