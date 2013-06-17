@@ -109,20 +109,22 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 		ServerInvocation invoke = (ServerInvocation)req.getParameters()[0];
 		//TODO verify the method to be invoked
 
-		//TODO handle multiple calls at once
-		Method method = cachedMethods.get(invoke.getMethod());
-		if (method == null) {
-			for (Method m : server.getClass().getMethods()) {
-				if (m.getName().equals(invoke.getMethod())) {
-					//TODO check better than this, verify the method may be invoked from the client
-					method = m;
-					break;
-				}
-			}
+		Method method;
+		synchronized (cachedMethods) {
+			method = cachedMethods.get(invoke.getMethod());
 			if (method == null) {
-				//TODO throw something
-			} else {
-				cachedMethods.put(invoke.getMethod(), method);
+				for (Method m : server.getClass().getMethods()) {
+					if (m.getName().equals(invoke.getMethod())) {
+						//TODO check better than this, verify the method may be invoked from the client
+						method = m;
+						break;
+					}
+				}
+				if (method == null) {
+					//TODO throw something
+				} else {
+					cachedMethods.put(invoke.getMethod(), method);
+				}
 			}
 		}
 
