@@ -66,4 +66,9 @@ public interface Server<S extends Server<S,C>, C extends Client<C,S>> {
 	 * @param client the client object to use on this server
 	 */
 	void setClient(C client);
+
+	/**
+	 * Closes the connection on the client. Should not be called in server code.
+	 */
+	void close();
 }

@@ -57,4 +57,8 @@ public abstract class AbstractServerImpl<S extends Server<S,C>, C extends Client
 		currentClient.set(client);
 	}
 
+	@Override
+	public final void close() {
+		throw new IllegalStateException("This method may not be called on the server, only on the client. To close the connection, invoke WebSocketConnection.close() on the connection you want to stop.");
+	}
 }

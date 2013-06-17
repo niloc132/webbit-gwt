@@ -204,4 +204,8 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		throw new UnsupportedOperationException("Cannot be called from client code");
 	}
 
+	@Override
+	public void close() {
+		__getConnection().close();
+	}
 }
