@@ -16,11 +16,6 @@
  */
 package samples.easychatroom.client;
 
-import org.webbitserver.gwt.client.ConnectionClosedEvent;
-import org.webbitserver.gwt.client.ConnectionOpenedEvent;
-import org.webbitserver.gwt.client.ConnectionOpenedEvent.ConnectionOpenedHandler;
-import org.webbitserver.gwt.client.ServerBuilder;
-
 import samples.easychatroom.shared.ChatServer;
 
 import com.google.gwt.core.client.EntryPoint;
@@ -29,6 +24,11 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
+
+import org.webbitserver.gwt.client.ConnectionClosedEvent;
+import org.webbitserver.gwt.client.ConnectionOpenedEvent;
+import org.webbitserver.gwt.client.ConnectionOpenedEvent.ConnectionOpenedHandler;
+import org.webbitserver.gwt.client.ServerBuilder;
 
 /**
  * @author colin
@@ -47,7 +47,7 @@ public class SampleEntryPoint implements EntryPoint {
 		//use the @RemoteServiceRelativePath given on the interface
 //		builder.setUrl("ws://" + Window.Location.getHost() + "/chat");
 		builder.setHostname(Window.Location.getHostName());
-		builder.setPort(9876);
+		builder.setPort(Integer.parseInt(Window.Location.getPort()));
 
 		// Because this is just a demo, we're using Window.prompt to get a username
 		final String username = Window.prompt("Select a username", "");

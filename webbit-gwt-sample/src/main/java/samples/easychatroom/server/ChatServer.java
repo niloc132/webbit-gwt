@@ -16,14 +16,14 @@
  */
 package samples.easychatroom.server;
 
-import java.io.IOException;
+import samples.easychatroom.shared.ChatClient;
 
 import org.webbitserver.WebServer;
 import org.webbitserver.WebServers;
 import org.webbitserver.gwt.server.GwtWebService;
 import org.webbitserver.handler.EmbeddedResourceHandler;
 
-import samples.easychatroom.shared.ChatClient;
+import java.io.IOException;
 
 /**
  * @author colin

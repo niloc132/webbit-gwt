@@ -16,13 +16,6 @@
  */
 package org.webbitserver.gwt.client.impl;
 
-import org.webbitserver.WebSocketConnection;
-import org.webbitserver.gwt.client.ServerBuilder.ConnectionErrorHandler;
-import org.webbitserver.gwt.shared.Client;
-import org.webbitserver.gwt.shared.Server;
-import org.webbitserver.gwt.shared.impl.ClientInvocation;
-import org.webbitserver.gwt.shared.impl.ServerInvocation;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -31,6 +24,13 @@ import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamWriter;
 import com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader;
 import com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter;
 import com.google.gwt.user.client.rpc.impl.Serializer;
+
+import org.webbitserver.WebSocketConnection;
+import org.webbitserver.gwt.client.ServerBuilder.ConnectionErrorHandler;
+import org.webbitserver.gwt.shared.Client;
+import org.webbitserver.gwt.shared.Server;
+import org.webbitserver.gwt.shared.impl.ClientInvocation;
+import org.webbitserver.gwt.shared.impl.ServerInvocation;
 
 /**
  * Simple impl of what the client thinks of the server as able to do. Used as a base class for
@@ -43,23 +43,26 @@ import com.google.gwt.user.client.rpc.impl.Serializer;
 public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> implements Server<S, C> {
 	private C client;
 	private final WebSocket connection;
+	private final ConnectionErrorHandler errorHandler;
 
 	/**
 	 * Creates a server impl, communicating with the host page's server, on the given path.
 	 * 
-	 * @param path absolute path to use to communicate with the server
+	 * @param errorHandler handler to notify in case of connection error
+	 * @param url absolute path to use to communicate with the server
 	 */
 	public ServerImpl(final ConnectionErrorHandler errorHandler, String url) {
+		this.errorHandler = errorHandler;
 		connection = WebSocket.create(url, new WebSocket.Callback() {
 			@Override
-			public void onOpen() {
+			public void onOpen(JavaScriptObject event) {
 				C client = __checkClient();
 				if (client != null) {
 					client.onOpen();
 				}
 			}
 			@Override
-			public void onClose() {
+			public void onClose(JavaScriptObject event) {
 				C client = __checkClient();
 				if (client != null) {
 					client.onClose();
@@ -116,6 +119,7 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		try {
 			__invoke(decodedMessage.getMethod(), decodedMessage.getParameters());
 		} catch (Exception ex) {
+			//pass any error when invoking a client method back to the error handler
 			getClient().onError(ex);
 		}
 	}
@@ -129,7 +133,7 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	protected void __sendMessage(String methodName, Object... params) {
 		ServerInvocation invoke = new ServerInvocation(methodName, params);
 
-		AbstractSerializationStreamWriter writer = new ClientSerializationStreamWriter(__getSerializer(), "", "");
+		AbstractSerializationStreamWriter writer = new ClientSerializationStreamWriter(__getSerializer(), "", "101010");
 		// manually prepare to serialize a method call to keep the server side simpler
 		writer.prepareToWrite();
 		writer.writeString("org.webbitserver.gwt.shared.impl.WebbitService");//interface
@@ -141,16 +145,21 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		try {
 			// actually encode the object to send
 			writer.writeObject(invoke);
+
+			// send the message over the wire
+			__getConnection().sendMessage(writer.toString());
 		} catch (SerializationException e) {
 			// report the error, then throw an exception. This is too important of an error to
 			// let it be ignored
-			__onError(e);
+			if (errorHandler != null) {
+				errorHandler.onError(e);
+			} else {
+				GWT.log("A serialization error occurred - pass a error handler to your server builder to handle this yourself", e);
+			}
 
+			//throw the exception so that any calling code can handle it
 			throw new RuntimeException(e);
 		}
-
-		// send the message over the wire
-		__getConnection().sendMessage(writer.toString());
 	}
 
 	/**
@@ -160,16 +169,6 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	 * @param params
 	 */
 	protected abstract void __invoke(String method, Object[] params);
-
-	/**
-	 * Allows for some error handling to be implemented in user code.
-	 * @param error the error that was found
-	 */
-	protected void __onError(Exception error) {
-		if (getClient() != null) {
-			getClient().onError(error);
-		}
-	}
 
 	public final WebSocket __getConnection() {
 		return connection;
@@ -200,12 +199,12 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		throw new UnsupportedOperationException("Cannot be called from client code");
 	}
 	@Override
-	public void onError(Throwable error) {
+	public final void onError(Throwable error) {
 		throw new UnsupportedOperationException("Cannot be called from client code");
 	}
 
 	@Override
-	public void close() {
+	public final void close() {
 		__getConnection().close();
 	}
 }

@@ -8,8 +8,8 @@
 	<name>Webbit GWT Parent Project</name>
 	<properties>
 		<webbit.version>0.2.10</webbit.version>
-		<gwt.version>2.5.1</gwt.version>
-		<gwt.plugin.version>2.5.1</gwt.plugin.version>
+		<gwt.version>2.6.0</gwt.version>
+		<gwt.plugin.version>2.6.0</gwt.plugin.version>
 	</properties>
 		
 	<dependencyManagement>

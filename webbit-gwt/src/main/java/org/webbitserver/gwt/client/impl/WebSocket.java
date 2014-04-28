@@ -27,20 +27,20 @@ public class WebSocket extends JavaScriptObject {
 		// jso protected ctor
 	}
 	public interface Callback {
-		void onOpen();
-		void onClose();
+		void onOpen(JavaScriptObject event);
+		void onClose(JavaScriptObject event);
 		void onMessage(String data);
 		void onError(JavaScriptObject error);
 	}
 
 	public static native WebSocket create(String url, Callback callback) /*-{
 		var ws = (!!$wnd.WebSocket) ? new $wnd.WebSocket(url) : $wnd.MozWebSocket(url);
-		ws.onopen = $entry(function(){callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onOpen()()});
-		ws.onclose = $entry(function(){callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onClose()()});
+		ws.onopen = $entry(function(e){callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onOpen(*)(e)});
+		ws.onclose = $entry(function(e){callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onClose(*)(e)});
 		ws.onmessage = $entry(function(e) {
 			callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onMessage(Ljava/lang/String;)(e.data);
 		});
-		ws.onerror = $entry(function(e){callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onError(Lcom/google/gwt/core/client/JavaScriptObject;)(e)});
+		ws.onerror = $entry(function(e){callback.@org.webbitserver.gwt.client.impl.WebSocket.Callback::onError(*)(e)});
 		return ws;
 	}-*/;
 
