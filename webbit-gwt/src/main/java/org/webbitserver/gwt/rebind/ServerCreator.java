@@ -16,15 +16,6 @@
  */
 package org.webbitserver.gwt.rebind;
 
-import java.io.PrintWriter;
-
-import org.webbitserver.gwt.client.ServerBuilder.ConnectionErrorHandler;
-import org.webbitserver.gwt.client.impl.ServerImpl;
-import org.webbitserver.gwt.shared.Client;
-import org.webbitserver.gwt.shared.Server;
-import org.webbitserver.gwt.shared.impl.ClientInvocation;
-import org.webbitserver.gwt.shared.impl.ServerInvocation;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.TreeLogger;
@@ -42,6 +33,15 @@ import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
 import com.google.gwt.user.rebind.rpc.SerializableTypeOracleBuilder;
 import com.google.gwt.user.rebind.rpc.TypeSerializerCreator;
+
+import org.webbitserver.gwt.client.ServerBuilder.ConnectionErrorHandler;
+import org.webbitserver.gwt.client.impl.ServerImpl;
+import org.webbitserver.gwt.shared.Client;
+import org.webbitserver.gwt.shared.Server;
+import org.webbitserver.gwt.shared.impl.ClientInvocation;
+import org.webbitserver.gwt.shared.impl.ServerInvocation;
+
+import java.io.PrintWriter;
 
 /**
  * Creates a new instance of the given Server type
@@ -78,15 +78,19 @@ public class ServerCreator {
 		SourceWriter sw = factory.createSourceWriter(context, pw);
 
 		//TODO move this check before the printwriter creation can fail, and allow the warn to be optional
+    sw.println("public %1$s(%2$s errorHandler) {", simpleName, Name.getSourceNameForClass(ConnectionErrorHandler.class));
 		RemoteServiceRelativePath path = this.serverType.getAnnotation(RemoteServiceRelativePath.class);
 		if (path == null) {
-			logger.log(Type.WARN, "@RemoteServiceRelativePath required on " + typeName + " to make a connection to the server without a ServerBuilder");
-			throw new UnableToCompleteException();
+//			logger.log(Type.WARN, "@RemoteServiceRelativePath required on " + typeName + " to make a connection to the server without a ServerBuilder");
+//			throw new UnableToCompleteException();
+      sw.indentln("super(null);");
+      sw.indentln("throw new RuntimeException(\"@RemoteServiceRelativePath annotation required on %1$s to make a connection without a path defined in ServerBuilder\");");
 		} else {
-			sw.println("public %1$s(%2$s errorHandler) {", simpleName, Name.getSourceNameForClass(ConnectionErrorHandler.class));
-			sw.indentln("super(errorHandler, \"ws://\", com.google.gwt.user.client.Window.Location.getHost(), \"%1$s\");", path.value());
-			sw.println("}");
+			sw.indentln("super(errorHandler, " +
+              "com.google.gwt.user.client.Window.Location.getProtocol().toLowerCase().startsWith(\"https\") ? \"wss://\": \"ws://\", " +
+              "com.google.gwt.user.client.Window.Location.getHost(), \"%1$s\");", path.value());
 		}
+    sw.println("}");
 
 		sw.println("public %1$s(%2$s errorHandler, String url) {", simpleName, Name.getSourceNameForClass(ConnectionErrorHandler.class));
 		sw.indentln("super(errorHandler, url);");

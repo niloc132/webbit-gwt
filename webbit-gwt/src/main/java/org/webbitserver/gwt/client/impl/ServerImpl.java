@@ -45,6 +45,14 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	private final WebSocket connection;
 	private final ConnectionErrorHandler errorHandler;
 
+  /**
+   * annoying useless constructor that doesn't do anything meaningful to let subclass throw an exception
+   */
+  public ServerImpl(Void nothing) {
+    connection = null;
+    errorHandler = null;
+  }
+
 	/**
 	 * Creates a server impl, communicating with the host page's server, on the given path.
 	 * 
