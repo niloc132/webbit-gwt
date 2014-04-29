@@ -35,11 +35,11 @@ public class ChatServer {
 	 * @param args
 	 * @throws IOException 
 	 */
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		WebServer webServer = WebServers.createWebServer(9876)
 		.add(new EmbeddedResourceHandler("static"))
 		.add("/chat", new GwtWebService<samples.easychatroom.shared.ChatServer,ChatClient>(new ChatServerImpl(), ChatClient.class))
-		.start();
+		.start().get();
 
 		System.out.println("Chat room running on: " + webServer.getUri());
 	}

@@ -16,13 +16,11 @@
  */
 package org.webbitserver.gwt.server;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.server.rpc.RPC;
+import com.google.gwt.user.server.rpc.RPCRequest;
+import com.google.gwt.user.server.rpc.SerializationPolicy;
+import com.google.gwt.user.server.rpc.SerializationPolicyProvider;
 
 import org.webbitserver.WebSocketConnection;
 import org.webbitserver.WebSocketHandler;
@@ -32,11 +30,13 @@ import org.webbitserver.gwt.shared.impl.ClientInvocation;
 import org.webbitserver.gwt.shared.impl.ServerInvocation;
 import org.webbitserver.gwt.shared.impl.WebbitService;
 
-import com.google.gwt.user.client.rpc.SerializationException;
-import com.google.gwt.user.server.rpc.RPC;
-import com.google.gwt.user.server.rpc.RPCRequest;
-import com.google.gwt.user.server.rpc.SerializationPolicy;
-import com.google.gwt.user.server.rpc.SerializationPolicyProvider;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Web Socket handler designed to talk to a GWT client, passing messages back and forth using the
@@ -92,7 +92,12 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 	}
 
 	@Override
-	public void onPong(WebSocketConnection connection, String msg) throws Throwable {
+	public void onPing(WebSocketConnection webSocketConnection, byte[] bytes) throws Throwable {
+		//no-op for now
+	}
+
+	@Override
+	public void onPong(WebSocketConnection webSocketConnection, byte[] bytes) throws Throwable {
 		//no-op for now
 	}
 
