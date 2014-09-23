@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module>
+	<source path="client"/>
+	<source path="shared"/>
+
+	<generate-with class="com.colinalworth.gwt.websockets.rebind.WebbitServerGenerator">
+		<when-type-assignable class="com.colinalworth.gwt.websockets.shared.Server"/>
+	</generate-with>
+
+	<generate-with class="com.colinalworth.gwt.websockets.rebind.ServerBuilderGenerator">
+		<when-type-assignable class="com.colinalworth.gwt.websockets.client.ServerBuilder" />
+	</generate-with>
+</module>

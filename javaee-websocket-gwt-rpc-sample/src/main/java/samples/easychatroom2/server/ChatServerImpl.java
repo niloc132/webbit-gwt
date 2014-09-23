@@ -1,0 +1,70 @@
+package samples.easychatroom2.server;
+
+import com.colinalworth.gwt.websockets.server.AbstractServerImpl;
+import samples.easychatroom2.shared.ChatClient;
+import samples.easychatroom2.shared.ChatServer;
+
+import javax.websocket.server.ServerEndpoint;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+@ServerEndpoint("/chat")
+public class ChatServerImpl extends AbstractServerImpl<ChatServer, ChatClient> implements ChatServer {
+	private static final Map<ChatClient, String> loggedIn = Collections.synchronizedMap(new HashMap<ChatClient, String>());
+
+	public ChatServerImpl() {
+		super(ChatClient.class);
+	}
+
+	@Override
+	public void onClose(Connection connection, ChatClient client) {
+		String userName = loggedIn.remove(client);
+		if (userName == null) {
+			return;
+		}
+
+		for (ChatClient connected : loggedIn.keySet()) {
+			connected.part(userName);
+		}
+	}
+
+	@Override
+	public void login(String username) {
+		System.out.println("login: " + username);
+		if (username == null || username.length() == 0) {
+			throw new IllegalArgumentException("Non-empty username required");
+		}
+
+		ChatClient c = getClient();
+		if (loggedIn.containsKey(c)) {
+			throw new IllegalArgumentException("Already logged in");
+		}
+		for (String name : loggedIn.values()) {
+			if (name.equals(username)) {
+				throw new IllegalArgumentException("Username already in use");
+			}
+		}
+		for (ChatClient connected : loggedIn.keySet()) {
+			connected.join(username);
+		}
+		loggedIn.put(c, username);
+	}
+
+	@Override
+	public void say(String message) {
+		System.out.println("say: " + message);
+		ChatClient c = getClient();
+		String userName = loggedIn.get(c);
+
+		for (ChatClient connected : loggedIn.keySet()) {
+			connected.say(userName, message);
+		}
+	}
+
+	@Override
+	public void onError(Throwable error) {
+		error.printStackTrace();
+	}
+
+}
