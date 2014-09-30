@@ -20,6 +20,7 @@ import com.colinalworth.gwt.websockets.client.ConnectionClosedEvent;
 import com.colinalworth.gwt.websockets.client.ConnectionOpenedEvent;
 import com.colinalworth.gwt.websockets.client.ConnectionOpenedEvent.ConnectionOpenedHandler;
 import com.colinalworth.gwt.websockets.client.ServerBuilder;
+import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -59,7 +60,19 @@ public class SampleEntryPoint implements EntryPoint {
 		impl.addConnectionOpenedHandler(new ConnectionOpenedHandler() {
 			@Override
 			public void onConnectionOpened(ConnectionOpenedEvent event) {
-				server.login(username);
+				server.login(username, new Callback<Void, String>() {
+					@Override
+					public void onFailure(String reason) {
+						Window.alert(reason);
+						final String username = Window.prompt("Select a username", "");
+						server.login(username, this);
+					}
+
+					@Override
+					public void onSuccess(Void result) {
+						RootLayoutPanel.get().add(impl);
+					}
+				});
 			}
 		});
 
@@ -80,8 +93,6 @@ public class SampleEntryPoint implements EntryPoint {
 				impl.message.setValue("");
 			}
 		});
-
-		RootLayoutPanel.get().add(impl);
 	}
 
 }

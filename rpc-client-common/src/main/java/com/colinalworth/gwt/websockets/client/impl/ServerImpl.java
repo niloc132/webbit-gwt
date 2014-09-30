@@ -1,10 +1,13 @@
 package com.colinalworth.gwt.websockets.client.impl;
 
+import com.colinalworth.gwt.websockets.client.ServerBuilder;
 import com.colinalworth.gwt.websockets.shared.Client;
 import com.colinalworth.gwt.websockets.shared.Server;
+import com.colinalworth.gwt.websockets.shared.impl.ClientCallbackInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.ClientInvocation;
+import com.colinalworth.gwt.websockets.shared.impl.ServerCallbackInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.ServerInvocation;
-import com.colinalworth.gwt.websockets.client.ServerBuilder;
+import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -13,6 +16,9 @@ import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamWriter;
 import com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader;
 import com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter;
 import com.google.gwt.user.client.rpc.impl.Serializer;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Simple impl of what the client thinks of the server as able to do. Used as a base class for
@@ -26,6 +32,9 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	private C client;
 	private final WebSocket connection;
 	private final ServerBuilder.ConnectionErrorHandler errorHandler;
+
+	private int nextCallbackId = 1;
+	private Map<Integer, Callback<?,?>> callbacks = new HashMap<Integer, Callback<?, ?>>();
 
 	/**
 	 * annoying useless constructor that doesn't do anything meaningful to let subclass throw an exception
@@ -105,12 +114,70 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		ClientSerializationStreamReader clientSerializationStreamReader = new ClientSerializationStreamReader(__getSerializer());
 		clientSerializationStreamReader.prepareToRead(message.substring(4));
 
-		ClientInvocation decodedMessage = (ClientInvocation) clientSerializationStreamReader.readObject();
+		Object object = clientSerializationStreamReader.readObject();
 		try {
-			__invoke(decodedMessage.getMethod(), decodedMessage.getParameters());
+			if (object instanceof ClientInvocation) {
+				final ClientInvocation invocation = (ClientInvocation) object;
+				final Object[] args;
+				if (invocation.getCallbackId() != 0) {
+					Callback<?, ?> callback = new Callback<Object, Object>() {
+						@Override
+						public void onFailure(Object reason) {
+							__sendCallback(invocation.getCallbackId(), reason, false);
+						}
+
+						@Override
+						public void onSuccess(Object result) {
+							__sendCallback(invocation.getCallbackId(), result, true);
+						}
+					};
+					args = new Object[invocation.getParameters().length + 1];
+					System.arraycopy(invocation.getParameters(), 0, args, 0, invocation.getParameters().length);
+					args[args.length - 1] = callback;
+				} else {
+					args = invocation.getParameters();
+				}
+				__invoke(invocation.getMethod(), args);
+			} else {
+				assert object instanceof ClientCallbackInvocation;
+				ClientCallbackInvocation callback = (ClientCallbackInvocation) object;
+				__callback(callback.getCallbackId(), callback.getResponse(), callback.isSuccess());
+			}
 		} catch (Exception ex) {
 			//pass any error when invoking a client method back to the error handler
 			getClient().onError(ex);
+		}
+	}
+
+	private void __sendCallback(int callbackId, Object response, boolean isSuccess) {
+		ServerCallbackInvocation callbackInvoke = new ServerCallbackInvocation(callbackId, response, isSuccess);
+
+		AbstractSerializationStreamWriter writer = new ClientSerializationStreamWriter(__getSerializer(), "", "101010");
+		// manually prepare to serialize a method call to keep the server side simpler
+		writer.prepareToWrite();
+		writer.writeString("com.colinalworth.gwt.websockets.shared.impl.WebbitService");//interface
+		writer.writeString("callback");//method name
+		writer.writeInt(1);//param count
+
+		writer.writeString("com.colinalworth.gwt.websockets.shared.impl.ServerCallbackInvocation");//param type
+
+		try {
+			// actually encode the object to send
+			writer.writeObject(callbackInvoke);
+
+			// send the message over the wire
+			__getConnection().sendMessage(writer.toString());
+		} catch (SerializationException e) {
+			// report the error, then throw an exception. This is too important of an error to
+			// let it be ignored
+			if (errorHandler != null) {
+				errorHandler.onError(e);
+			} else {
+				GWT.log("A serialization error occurred - pass a error handler to your server builder to handle this yourself", e);
+			}
+
+			//throw the exception so that any calling code can handle it
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -120,14 +187,21 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	 * @param methodName
 	 * @param params
 	 */
-	protected void __sendMessage(String methodName, Object... params) {
-		ServerInvocation invoke = new ServerInvocation(methodName, params);
+	protected void __sendMessage(String methodName, Callback<?, ?> callback, Object... params) {
+		final int callbackId;
+		if (callback != null) {
+			callbackId = nextCallbackId++;
+			callbacks.put(callbackId, callback);
+		} else {
+			callbackId = 0;
+		}
+		ServerInvocation invoke = new ServerInvocation(methodName, params, callbackId);
 
 		AbstractSerializationStreamWriter writer = new ClientSerializationStreamWriter(__getSerializer(), "", "101010");
 		// manually prepare to serialize a method call to keep the server side simpler
 		writer.prepareToWrite();
 		writer.writeString("com.colinalworth.gwt.websockets.shared.impl.WebbitService");//interface
-		writer.writeString("dummy");//method name
+		writer.writeString("invoke");//method name
 		writer.writeInt(1);//param count
 
 		writer.writeString("com.colinalworth.gwt.websockets.shared.impl.ServerInvocation");//param type
@@ -159,6 +233,17 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	 * @param params
 	 */
 	protected abstract void __invoke(String method, Object[] params);
+
+	private void __callback(int callbackId, Object response, boolean success) {
+		if (callbacks.containsKey(callbackId)) {
+			@SuppressWarnings("unchecked") Callback<Object, Object> c = (Callback<Object, Object>) callbacks.remove(callbackId);
+			if (success) {
+				c.onSuccess(response);
+			} else {
+				c.onFailure(response);
+			}
+		}
+	}
 
 	public final WebSocket __getConnection() {
 		return connection;

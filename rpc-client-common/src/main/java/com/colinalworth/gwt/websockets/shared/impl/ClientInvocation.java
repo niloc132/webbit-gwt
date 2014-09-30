@@ -24,16 +24,33 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  *
  */
 public class ClientInvocation implements IsSerializable {
+	private int callbackId;
+
 	private String method;
 	@GwtTransient
 	private Object[] parameters;
 
 	public ClientInvocation() {
 	}
-	public ClientInvocation(String method, Object[] params) {
+
+	public ClientInvocation(String method, Object[] params, int callbackId) {
 		this.method = method;
 		this.parameters = params;
+		this.callbackId = callbackId;
 	}
+
+	/**
+	 * Returns the id of the callback on the client that should be invoked when the callback argument is used on the server
+	 * @return a non-zero value if a callback should be invoked
+	 */
+	public int getCallbackId() {
+		return callbackId;
+	}
+
+	public void setCallbackId(int callbackId) {
+		this.callbackId = callbackId;
+	}
+
 	/**
 	 * @return the method
 	 */

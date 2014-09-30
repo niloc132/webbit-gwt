@@ -24,5 +24,6 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  *
  */
 public interface WebbitServiceAsync {
-	RequestBuilder dummy(ServerInvocation serverInvocation, AsyncCallback<ClientInvocation> callback);
+	RequestBuilder invoke(ServerInvocation serverInvocation, AsyncCallback<ClientInvocation> callback);
+	RequestBuilder callback(ServerCallbackInvocation serverCallbackInvocation, AsyncCallback<ClientCallbackInvocation> callback);
 }

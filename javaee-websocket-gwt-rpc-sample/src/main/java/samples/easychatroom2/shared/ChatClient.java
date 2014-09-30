@@ -1,6 +1,7 @@
 package samples.easychatroom2.shared;
 
 import com.colinalworth.gwt.websockets.shared.Client;
+import com.google.gwt.core.client.Callback;
 
 /**
  * Simple example of methods implemented by a GWT client that can be called from the server
@@ -25,4 +26,11 @@ public interface ChatClient extends Client<ChatClient, ChatServer> {
 	 * @param username the user who left
 	 */
 	void part(String username);
+
+
+	/**
+	 * Test method to have the server send the client a message and get a response right away
+	 * @param callback response that the client should call upon receipt of this method
+	 */
+	void ping(Callback<Void, Void> callback);
 }

@@ -29,6 +29,7 @@ public class ServerInvocation_CustomFieldSerializer extends CustomFieldSerialize
 
 	public static void deserialize(SerializationStreamReader streamReader, ServerInvocation instance) throws SerializationException {
 		instance.setMethod(streamReader.readString());
+		instance.setCallbackId(streamReader.readInt());
 
 		int length = streamReader.readInt();
 		Object[] params = new Object[length];
@@ -45,6 +46,8 @@ public class ServerInvocation_CustomFieldSerializer extends CustomFieldSerialize
 
 	public static void serialize(SerializationStreamWriter streamWriter,ServerInvocation instance) throws SerializationException {
 		streamWriter.writeString(instance.getMethod());
+		streamWriter.writeInt(instance.getCallbackId());
+
 		streamWriter.writeInt(instance.getParameters().length);
 		for (Object param : instance.getParameters()) {
 			streamWriter.writeObject(param);

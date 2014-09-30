@@ -19,15 +19,17 @@ package com.colinalworth.gwt.websockets.server;
 import com.colinalworth.gwt.websockets.shared.Client;
 import com.colinalworth.gwt.websockets.shared.Server;
 import com.colinalworth.gwt.websockets.shared.Server.Connection;
+import com.colinalworth.gwt.websockets.shared.impl.ClientCallbackInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.ClientInvocation;
+import com.colinalworth.gwt.websockets.shared.impl.ServerCallbackInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.ServerInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.WebbitService;
+import com.google.gwt.core.client.Callback;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.server.rpc.RPC;
 import com.google.gwt.user.server.rpc.RPCRequest;
 import com.google.gwt.user.server.rpc.SerializationPolicy;
 import com.google.gwt.user.server.rpc.SerializationPolicyProvider;
-
 import org.webbitserver.WebSocketConnection;
 import org.webbitserver.WebSocketHandler;
 
@@ -38,6 +40,7 @@ import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Web Socket handler designed to talk to a GWT client, passing messages back and forth using the
@@ -54,21 +57,27 @@ import java.util.Map;
  *
  */
 public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> implements WebSocketHandler {
-	private static final Method DUMMY_RPC_METHOD;
+	private static final Method INVOKE_RPC_METHOD;
+	private static final Method CALLBACK_RPC_METHOD;
 	static {
-		Method m = null;
+		Method m1 = null, m2 = null;
 		try {
-			m = WebbitService.class.getDeclaredMethod("dummy", ServerInvocation.class);
+			m1 = WebbitService.class.getDeclaredMethod("invoke", ServerInvocation.class);
+			m2 = WebbitService.class.getDeclaredMethod("callback", ServerCallbackInvocation.class);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		DUMMY_RPC_METHOD = m;
+		INVOKE_RPC_METHOD = m1;
+		CALLBACK_RPC_METHOD = m2;
 	}
 
 	private final S server;
 	private final Class<C> client;
 
 	private final Map<String, Method> cachedMethods = Collections.synchronizedMap(new HashMap<String, Method>());
+
+	private final Map<Integer, Callback<?, ?>> callbacks = Collections.synchronizedMap(new HashMap<Integer, Callback<?, ?>>());
+	private final AtomicInteger nextCallbackId = new AtomicInteger(1);
 
 	/**
 	 * Creates a new service instance, making method calls to the given server instance, and 
@@ -85,7 +94,7 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 	@Override
 	public void onOpen(WebSocketConnection connection) throws Exception {
 		//
-		C clientInstance = (C)Proxy.newProxyInstance(client.getClassLoader(), new Class<?>[] {client}, new IH(connection));
+		C clientInstance = (C)Proxy.newProxyInstance(client.getClassLoader(), new Class<?>[] {client}, new IH(connection, callbacks, nextCallbackId));
 		connection.data(getClass().getName() + ".client", clientInstance);
 		server.onOpen(new WebbitConnection(connection), clientInstance);
 	}
@@ -116,9 +125,27 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 		RPCRequest req = RPC.decodeRequest(msg, null, makeProvider());
 		//Method m = req.getMethod();//garbage
 
-		ServerInvocation invoke = (ServerInvocation)req.getParameters()[0];
-		//TODO verify the method to be invoked
+		Object message = req.getParameters()[0];
 
+		if (message instanceof ServerCallbackInvocation) {
+			ServerCallbackInvocation callbackInvoke = (ServerCallbackInvocation) message;
+
+			if (callbacks.containsKey(callbackInvoke.getCallbackId())) {
+				@SuppressWarnings("unchecked")
+				Callback<Object, Object> callback = (Callback<Object, Object>) callbacks.remove(callbackInvoke.getCallbackId());
+
+				if (callbackInvoke.isSuccess()) {
+					callback.onSuccess(callbackInvoke.getResponse());
+				} else {
+					callback.onFailure(callbackInvoke.getResponse());
+				}
+			}
+			return;
+		}
+
+		ServerInvocation invoke = (ServerInvocation) message;
+
+		//TODO verify the method to be invoked
 		Method method;
 		synchronized (cachedMethods) {
 			method = cachedMethods.get(invoke.getMethod());
@@ -140,13 +167,59 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 
 		server.setClient((C)connection.data(getClass().getName() + ".client"));
 		try {
-			method.invoke(server, invoke.getParameters());
+			if (invoke.getCallbackId() != 0) {
+				Object[] args = addCallbackToArgs(invoke.getParameters(), invoke.getCallbackId(), connection);
+				method.invoke(server, args);
+			} else {
+				method.invoke(server, invoke.getParameters());
+			}
 		} catch (InvocationTargetException ex) {
 			Throwable unwrapped = ex.getCause();
 			server.onError(unwrapped);
 		} finally {
 			server.setClient(null);
 		}
+	}
+
+	private Object[] addCallbackToArgs(Object[] originalArgs, final int callbackId, final WebSocketConnection connection) {
+		Object[] newArgs = new Object[originalArgs.length + 1];
+		System.arraycopy(originalArgs, 0, newArgs, 0, originalArgs.length);
+		newArgs[originalArgs.length] = new Callback<Object, Object>() {
+			boolean fired = false;
+			@Override
+			public void onSuccess(Object result) {
+				checkFired();
+				callback(callbackId, result, true, connection);
+			}
+
+			@Override
+			public void onFailure(Object reason) {
+				checkFired();
+				callback(callbackId, reason, false, connection);
+			}
+
+			private void checkFired() {
+				if (fired) {
+					throw new IllegalStateException("Callback already used, cannot be used again.");
+				}
+				fired = true;
+			}
+		};
+		return newArgs;
+	}
+
+	private void callback(int callbackId, Object response, boolean isSuccess, WebSocketConnection connection) {
+		ClientCallbackInvocation callbackInvocation = new ClientCallbackInvocation(callbackId, response, isSuccess);
+
+		try {
+			// Encode and send the message
+			int flags = 0;
+			String message = RPC.encodeResponseForSuccess(CALLBACK_RPC_METHOD, callbackInvocation, makePolicy(), flags);
+		  connection.send(message);
+		} catch (SerializationException e) {
+			throw new RuntimeException("Failed to send callback to client, " + e);
+		}
+
 	}
 
 	//TODO factor this out elsewhere, and replace with the real thing
@@ -181,8 +254,13 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 
 	private static class IH implements InvocationHandler {
 		private final WebSocketConnection connection;
-		public IH(WebSocketConnection connection) {
+		private final Map<Integer, Callback<?, ?>> callbacks;
+		private final AtomicInteger nextCallbackId;
+
+		public IH(WebSocketConnection connection, Map<Integer, Callback<?, ?>> callbacks, AtomicInteger nextCallbackId) {
 			this.connection = connection;
+			this.callbacks = callbacks;
+			this.nextCallbackId = nextCallbackId;
 		}
 		@Override
 		public Object invoke(Object proxy, Method method, Object[] args)
@@ -200,12 +278,24 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 				throw new IllegalArgumentException("Calls to client must be of return type Void");
 			}
 
+			final int callbackId;
+			final Object[] actualArgs;
+			if (method.getParameterTypes()[method.getParameterTypes().length - 1] == Callback.class) {
+				callbackId = nextCallbackId.getAndIncrement();
+				callbacks.put(callbackId, (Callback<?, ?>) args[args.length - 1]);
+				actualArgs = new Object[args.length - 1];
+				System.arraycopy(args, 0, actualArgs, 0, actualArgs.length);
+			} else {
+				callbackId = 0;
+				actualArgs = args;
+			}
+
 			// Build an invocation instance to send to the client
-			ClientInvocation invocation = new ClientInvocation(method.getName(), args);
+			ClientInvocation invocation = new ClientInvocation(method.getName(), actualArgs, callbackId);
 
 			// Encode and send the message
 			int flags = 0;
-			String message = RPC.encodeResponseForSuccess(DUMMY_RPC_METHOD, invocation, makePolicy(), flags);
+			String message = RPC.encodeResponseForSuccess(INVOKE_RPC_METHOD, invocation, makePolicy(), flags);
 			connection.send(message);
 
 			return null;//void method, so no return val

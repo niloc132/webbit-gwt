@@ -23,5 +23,6 @@ import com.google.gwt.user.client.rpc.RemoteService;
  *
  */
 public interface WebbitService extends RemoteService {
-	ClientInvocation dummy(ServerInvocation serverInvocation);
+	ClientInvocation invoke(ServerInvocation serverInvocation);
+	ClientCallbackInvocation callback(ServerCallbackInvocation serverCallbackInvocation);
 }

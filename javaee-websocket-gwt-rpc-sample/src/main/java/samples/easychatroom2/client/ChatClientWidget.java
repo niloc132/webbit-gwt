@@ -1,6 +1,7 @@
 package samples.easychatroom2.client;
 
 import com.colinalworth.gwt.websockets.client.AbstractClientImpl;
+import com.google.gwt.core.client.Callback;
 import samples.easychatroom2.shared.ChatClient;
 
 import com.google.gwt.dom.client.Style.Unit;
@@ -54,6 +55,11 @@ public class ChatClientWidget extends AbstractClientImpl<ChatClient, ChatServer>
 	@Override
 	public void part(String username) {
 		addMessage(username + " has left");
+	}
+
+	@Override
+	public void ping(Callback<Void, Void> callback) {
+		callback.onSuccess(null);
 	}
 
 	@Override

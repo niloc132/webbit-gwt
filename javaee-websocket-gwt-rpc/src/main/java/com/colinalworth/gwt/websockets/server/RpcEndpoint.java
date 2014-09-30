@@ -3,9 +3,12 @@ package com.colinalworth.gwt.websockets.server;
 import com.colinalworth.gwt.websockets.shared.Client;
 import com.colinalworth.gwt.websockets.shared.Server;
 import com.colinalworth.gwt.websockets.shared.Server.Connection;
+import com.colinalworth.gwt.websockets.shared.impl.ClientCallbackInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.ClientInvocation;
+import com.colinalworth.gwt.websockets.shared.impl.ServerCallbackInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.ServerInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.WebbitService;
+import com.google.gwt.core.client.Callback;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.server.rpc.RPC;
 import com.google.gwt.user.server.rpc.RPCRequest;
@@ -25,18 +28,21 @@ import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RpcEndpoint<S extends Server<S, C>, C extends Client<C, S>> {
-	private static final Method DUMMY_RPC_METHOD;
+	private static final Method INVOKE_RPC_METHOD;
+	private static final Method CALLBACK_RPC_METHOD;
 	static {
-		Method m = null;
+		Method m1 = null, m2 = null;
 		try {
-			m = WebbitService.class.getDeclaredMethod("dummy", ServerInvocation.class);
+			m1 = WebbitService.class.getDeclaredMethod("invoke", ServerInvocation.class);
+			m2 = WebbitService.class.getDeclaredMethod("callback", ServerCallbackInvocation.class);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		DUMMY_RPC_METHOD = m;
+		INVOKE_RPC_METHOD = m1;
+		CALLBACK_RPC_METHOD = m2;
 	}
 
 	private final S server;
@@ -44,6 +50,9 @@ public class RpcEndpoint<S extends Server<S, C>, C extends Client<C, S>> {
 
 	private final Map<String, Method> cachedMethods = Collections.synchronizedMap(new HashMap<String, Method>());
 
+
+	private final Map<Integer, Callback<?, ?>> callbacks = Collections.synchronizedMap(new HashMap<Integer, Callback<?, ?>>());
+	private final AtomicInteger nextCallbackId = new AtomicInteger(1);
 
 	public RpcEndpoint(S server, Class<C> client) {
 		assert server != null : "Can't make an endpoint with a null server instance";
@@ -84,7 +93,25 @@ public class RpcEndpoint<S extends Server<S, C>, C extends Client<C, S>> {
 		RPCRequest req = RPC.decodeRequest(message, null, makeProvider());
 		//Method m = req.getMethod();//garbage
 
-		ServerInvocation invoke = (ServerInvocation)req.getParameters()[0];
+		Object object = req.getParameters()[0];
+
+		if (object instanceof ServerCallbackInvocation) {
+			ServerCallbackInvocation callbackInvoke = (ServerCallbackInvocation) object;
+
+			if (callbacks.containsKey(callbackInvoke.getCallbackId())) {
+				@SuppressWarnings("unchecked")
+				Callback<Object, Object> callback = (Callback<Object, Object>) callbacks.remove(callbackInvoke.getCallbackId());
+
+				if (callbackInvoke.isSuccess()) {
+					callback.onSuccess(callbackInvoke.getResponse());
+				} else {
+					callback.onFailure(callbackInvoke.getResponse());
+				}
+			}
+			return;
+		}
+
+		ServerInvocation invoke = (ServerInvocation) object;
 		//TODO verify the method to be invoked
 
 		Method method;
@@ -108,13 +135,59 @@ public class RpcEndpoint<S extends Server<S, C>, C extends Client<C, S>> {
 		}
 
 		try {
-			method.invoke(server, invoke.getParameters());
+			if (invoke.getCallbackId() != 0) {
+				Object[] args = addCallbackToArgs(invoke.getParameters(), invoke.getCallbackId(), session);
+				method.invoke(server, args);
+			} else {
+				method.invoke(server, invoke.getParameters());
+			}
 		} catch (InvocationTargetException ex) {
 			Throwable unwrapped = ex.getCause();
 			server.onError(unwrapped);
 		} catch (IllegalAccessException e) {
 			server.onError(e);
 		}
+	}
+
+	private Object[] addCallbackToArgs(Object[] originalArgs, final int callbackId, final Session session) {
+		Object[] newArgs = new Object[originalArgs.length + 1];
+		System.arraycopy(originalArgs, 0, newArgs, 0, originalArgs.length);
+		newArgs[originalArgs.length] = new Callback<Object, Object>() {
+			boolean fired = false;
+			@Override
+			public void onSuccess(Object result) {
+				checkFired();
+				callback(callbackId, result, true, session);
+			}
+
+			@Override
+			public void onFailure(Object reason) {
+				checkFired();
+				callback(callbackId, reason, false, session);
+			}
+
+			private void checkFired() {
+				if (fired) {
+					throw new IllegalStateException("Callback already used, cannot be used again.");
+				}
+				fired = true;
+			}
+		};
+		return newArgs;
+	}
+
+	private void callback(int callbackId, Object response, boolean isSuccess, Session session) {
+		ClientCallbackInvocation callbackInvocation = new ClientCallbackInvocation(callbackId, response, isSuccess);
+
+		try {
+			// Encode and send the message
+			int flags = 0;
+			String message = RPC.encodeResponseForSuccess(CALLBACK_RPC_METHOD, callbackInvocation, makePolicy(), flags);
+			session.getAsyncRemote().sendText(message);
+		} catch (SerializationException e) {
+			throw new RuntimeException("Failed to send callback to client, " + e);
+		}
+
 	}
 
 	@OnClose
@@ -159,7 +232,7 @@ public class RpcEndpoint<S extends Server<S, C>, C extends Client<C, S>> {
 		};
 	}
 
-	private static class IH implements InvocationHandler {
+	private class IH implements InvocationHandler {
 		private final Session session;
 
 		private IH(Session session) {
@@ -181,15 +254,26 @@ public class RpcEndpoint<S extends Server<S, C>, C extends Client<C, S>> {
 				throw new IllegalArgumentException("Calls to client must be of return type Void");
 			}
 
+			final int callbackId;
+			final Object[] actualArgs;
+			if (method.getParameterTypes()[method.getParameterTypes().length - 1] == Callback.class) {
+				callbackId = nextCallbackId.getAndIncrement();
+				callbacks.put(callbackId, (Callback<?, ?>) args[args.length - 1]);
+				actualArgs = new Object[args.length - 1];
+				System.arraycopy(args, 0, actualArgs, 0, actualArgs.length);
+			} else {
+				callbackId = 0;
+				actualArgs = args;
+			}
+
 			// Build an invocation instance to send to the client
-			ClientInvocation invocation = new ClientInvocation(method.getName(), args);
+			ClientInvocation invocation = new ClientInvocation(method.getName(), actualArgs, callbackId);
 
 			// Encode and send the message
 			int flags = 0;
-			String message = RPC.encodeResponseForSuccess(DUMMY_RPC_METHOD, invocation, makePolicy(), flags);
+			String message = RPC.encodeResponseForSuccess(INVOKE_RPC_METHOD, invocation, makePolicy(), flags);
 
-			Future<Void> future = session.getAsyncRemote().sendText(message);
-			future.get();
+			session.getAsyncRemote().sendText(message);
 			//TODO handle future's error, if any
 
 

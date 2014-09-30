@@ -7,13 +7,15 @@ WebSockets are established from the client to the server, and while open are mai
 to continue to communicate over the same channel. Either side can send a string to the other at any time.
 This project uses this to enable one-way RPC methods to easily be sent.
 
-At present, the default setup for this is to make all methods return `void` - no `AsyncCallbacks` are
-specified. This simplifies the number of interfaces required to create and maintain for a project - there
-is no need to create both a 'normal' interface and a matching 'async' interface. There are still two
-interfaces required though, but they do not need to keep in sync with each other - one represents the
-calls the server can make to the client, and the other represents the calls the client can make to the
-server. For those calls which require a callback, a matching 'callback method' can be defined in the other
-interface.
+The default setup for this is to only use a pair of interfaces, one for the client, and one for the server.
+Since the client API needs to know about the server and vice versa, generics are used so that either side
+of the API can see to the other.
+
+Methods can optionally take a `Callback<T,F>` object as the final parameter, but instead of the server
+implementing the same method synchronously, both client and server code are written to assume async behavior.
+Note however that callbacks are often not required - messages can be passed without *expecting* a reply back.
+Note also that callbacks are one-time use, and cannot be invoked multiple times - use a different method
+on the opposite interface to achieve that effect.
 
 Two server implementations are supported - Webbit (a Netty-based websocket server), and
 [JSR-356](https://www.jcp.org/en/jsr/detail?id=356) (the spec for javax.websocket, implemented by

@@ -19,9 +19,12 @@ package com.colinalworth.gwt.websockets.rebind;
 import com.colinalworth.gwt.websockets.client.impl.ServerImpl;
 import com.colinalworth.gwt.websockets.shared.Client;
 import com.colinalworth.gwt.websockets.shared.Server;
+import com.colinalworth.gwt.websockets.shared.impl.ClientCallbackInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.ClientInvocation;
+import com.colinalworth.gwt.websockets.shared.impl.ServerCallbackInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.ServerInvocation;
 import com.colinalworth.gwt.websockets.client.ServerBuilder;
+import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.TreeLogger;
@@ -101,12 +104,14 @@ public class ServerCreator {
 		appendMethodParameters(logger, clientType, Client.class, serverSerializerBuilder);
 		// Also add the wrapper object ClientInvocation
 		serverSerializerBuilder.addRootType(logger, oracle.findType(ClientInvocation.class.getName()));
+		serverSerializerBuilder.addRootType(logger, oracle.findType(ClientCallbackInvocation.class.getName()));
 
 		// Collect the types the client will send to the server using the Server interface
 		SerializableTypeOracleBuilder clientSerializerBuilder = new SerializableTypeOracleBuilder(logger, context.getPropertyOracle(), context);
 		appendMethodParameters(logger, this.serverType, Server.class, clientSerializerBuilder);
 		// Also add the ServerInvocation wrapper
 		clientSerializerBuilder.addRootType(logger, oracle.findType(ServerInvocation.class.getName()));
+		clientSerializerBuilder.addRootType(logger, oracle.findType(ServerCallbackInvocation.class.getName()));
 
 		String tsName = simpleName + "_TypeSerializer";
 		TypeSerializerCreator serializerCreator = new TypeSerializerCreator(logger, clientSerializerBuilder.build(logger), serverSerializerBuilder.build(logger), context, packageName + "." + tsName, tsName);
@@ -179,8 +184,12 @@ public class ServerCreator {
 		TreeLogger l = logger.branch(Type.DEBUG, "Adding params types to " + serviceInterface.getName());
 		for (JMethod m : serviceInterface.getMethods()) {
 			if (isRemoteMethod(m, serviceSuperClass)) {
-				for (JParameter param : m.getParameters()) {
-					serializerBuilder.addRootType(l, param.getType());
+				JParameter[] parameters = m.getParameters();
+				for (int i = 0; i < parameters.length; i++) {
+					JParameter param = parameters[i];
+					if (i + 1 != m.getParameters().length || param.getType().isInterface() == null || !param.getType().isInterface().getQualifiedSourceName().equals(Callback.class.getName())) {
+					  serializerBuilder.addRootType(l, param.getType());
+					}
 				}
 			}
 		}
@@ -198,10 +207,21 @@ public class ServerCreator {
 		sw.println("%1$s {", m.getReadableDeclaration(false, true, true, true, true));
 		sw.indent();
 
-		sw.println("__sendMessage(\"%1$s\"", m.getName());
-		for (JParameter param : m.getParameters()) {
-			sw.indentln(", %1$s", param.getName());
+		sw.print("__sendMessage(\"%1$s\"", m.getName());
+		StringBuilder sb = new StringBuilder();
+		String callback = "null";
+		JParameter[] parameters = m.getParameters();
+		for (int i = 0; i < parameters.length; i++) {
+			JParameter param = parameters[i];
+			if (i + 1 == parameters.length && param.getType().isInterface() != null && param.getType().isInterface().getQualifiedSourceName().equals(Callback.class.getName())) {
+				callback = param.getName();
+			} else {
+				sb.append(",\n").append(param.getName());
+			}
 		}
+		sw.print(",");
+		sw.println(callback);
+		sw.print(sb.toString());
 		sw.println(");");
 
 		sw.outdent();
