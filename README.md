@@ -54,6 +54,15 @@ These interfaces refer to each other in their generics. Here is a simple client 
     	 * @param username the user who left
     	 */
     	void part(String username);
+
+    	/**
+    	 * Test method to have the server send the client a message and get a response right away.
+    	 * This demonstrates that the server can call the client with a callback to get its response
+    	 * other than via a Server method.
+    	 *
+    	 * @param callback response that the client should call upon receipt of this method
+    	 */
+    	void ping(Callback<Void, Void> callback);
     }
 
 The client code must implement this interface, and will be called when the server invokes any of those
@@ -69,8 +78,9 @@ app, call other methods, directly interact with the UI, etc.
     	/**
     	 * Brings the user into the chat room, with the given username
     	 * @param username the name to use
+    	 * @param callback indicates the login was successful, or passes back an error message
     	 */
-    	void login(String username);
+    	void login(String username, Callback<Void, String> callback);
 
     	/**
     	 * Sends the given message to the chatroom
