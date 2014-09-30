@@ -121,14 +121,24 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 				final Object[] args;
 				if (invocation.getCallbackId() != 0) {
 					Callback<?, ?> callback = new Callback<Object, Object>() {
+						private boolean fired = false;
 						@Override
 						public void onFailure(Object reason) {
+							checkFired();
 							__sendCallback(invocation.getCallbackId(), reason, false);
 						}
 
 						@Override
 						public void onSuccess(Object result) {
+							checkFired();
 							__sendCallback(invocation.getCallbackId(), result, true);
+						}
+
+						private void checkFired() {
+							if (fired) {
+								throw new IllegalStateException("Callback already used, cannot be used again.");
+							}
+							fired = true;
 						}
 					};
 					args = new Object[invocation.getParameters().length + 1];
