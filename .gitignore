@@ -3,3 +3,5 @@ bin
 .project
 .classpath
 .settings
+*.iml
+dependency-reduced-pom.xml
