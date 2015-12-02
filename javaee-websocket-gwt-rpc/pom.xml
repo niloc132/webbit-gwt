@@ -17,7 +17,7 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.google.gwt</groupId>
+			<groupId>${gwt.groupId}</groupId>
 			<artifactId>gwt-servlet</artifactId>
 		</dependency>
 

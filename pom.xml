@@ -14,8 +14,10 @@
 	<properties>
 		<webbit.version>0.4.15</webbit.version>
 
-		<gwt.version>2.6.1</gwt.version>
-		<gwt.plugin.version>2.6.1</gwt.plugin.version>
+		<gwt.groupId>com.google.gwt</gwt.groupId>
+		<gwt.plugin.groupId>org.codehaus.mojo</gwt.plugin.groupId>
+		<gwt.version>2.7.0</gwt.version>
+		<gwt.plugin.version>2.7.0</gwt.plugin.version>
 	</properties>
 
 	<dependencyManagement>
@@ -28,7 +30,7 @@
 			</dependency>
 
 			<dependency>
-				<groupId>com.google.gwt</groupId>
+				<groupId>${gwt.groupId}</groupId>
 				<artifactId>gwt-servlet</artifactId>
 				<version>${gwt.version}</version>
 			</dependency>
@@ -36,7 +38,7 @@
 			<!-- This dep causes gwt-m-p to warn about complex dependencies, ignore 
 				it -->
 			<dependency>
-				<groupId>com.google.gwt</groupId>
+				<groupId>${gwt.groupId}</groupId>
 				<artifactId>gwt-dev</artifactId>
 				<version>${gwt.version}</version>
 				<scope>provided</scope>
@@ -44,7 +46,7 @@
 
 			<!-- Depend on gwt-user, -dev for compilation only -->
 			<dependency>
-				<groupId>com.google.gwt</groupId>
+				<groupId>${gwt.groupId}</groupId>
 				<artifactId>gwt-user</artifactId>
 				<version>${gwt.version}</version>
 			</dependency>
@@ -61,17 +63,17 @@
 		<pluginManagement>
 			<plugins>
 				<plugin>
-					<groupId>org.codehaus.mojo</groupId>
+					<groupId>${gwt.plugin.groupId}</groupId>
 					<artifactId>gwt-maven-plugin</artifactId>
 					<version>${gwt.plugin.version}</version>
 					<dependencies>
 						<dependency>
-							<groupId>com.google.gwt</groupId>
+							<groupId>${gwt.groupId}</groupId>
 							<artifactId>gwt-user</artifactId>
 							<version>${gwt.version}</version>
 						</dependency>
 						<dependency>
-							<groupId>com.google.gwt</groupId>
+							<groupId>${gwt.groupId}</groupId>
 							<artifactId>gwt-dev</artifactId>
 							<version>${gwt.version}</version>
 						</dependency>
