@@ -22,13 +22,13 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.google.gwt</groupId>
+			<groupId>${gwt.groupId}</groupId>
 			<artifactId>gwt-servlet</artifactId>
 		</dependency>
 
 		<!-- Depend on gwt-user for compilation only -->
 		<dependency>
-			<groupId>com.google.gwt</groupId>
+			<groupId>${gwt.groupId}</groupId>
 			<artifactId>gwt-user</artifactId>
 			<scope>provided</scope>
 		</dependency>
@@ -42,7 +42,7 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
+				<groupId>${gwt.plugin.groupId}</groupId>
 				<artifactId>gwt-maven-plugin</artifactId>
 				<executions>
 					<execution>

@@ -100,14 +100,14 @@ public class ServerCreator {
 
 		//Find all types that may go over the wire
 		// Collect the types the server will send to the client using the Client interface
-		SerializableTypeOracleBuilder serverSerializerBuilder = new SerializableTypeOracleBuilder(logger, context.getPropertyOracle(), context);
+		SerializableTypeOracleBuilder serverSerializerBuilder = new SerializableTypeOracleBuilder(logger, context);
 		appendMethodParameters(logger, clientType, Client.class, serverSerializerBuilder);
 		// Also add the wrapper object ClientInvocation
 		serverSerializerBuilder.addRootType(logger, oracle.findType(ClientInvocation.class.getName()));
 		serverSerializerBuilder.addRootType(logger, oracle.findType(ClientCallbackInvocation.class.getName()));
 
 		// Collect the types the client will send to the server using the Server interface
-		SerializableTypeOracleBuilder clientSerializerBuilder = new SerializableTypeOracleBuilder(logger, context.getPropertyOracle(), context);
+		SerializableTypeOracleBuilder clientSerializerBuilder = new SerializableTypeOracleBuilder(logger, context);
 		appendMethodParameters(logger, this.serverType, Server.class, clientSerializerBuilder);
 		// Also add the ServerInvocation wrapper
 		clientSerializerBuilder.addRootType(logger, oracle.findType(ServerInvocation.class.getName()));
