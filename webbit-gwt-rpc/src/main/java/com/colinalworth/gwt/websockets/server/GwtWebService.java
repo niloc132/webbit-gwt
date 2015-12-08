@@ -240,6 +240,9 @@ public class GwtWebService<S extends Server<S,C>, C extends Client<C,S>> impleme
 			public boolean shouldDeserializeFields(Class<?> clazz) {
 				return clazz != null;
 			}
+			public boolean shouldSerializeFinalFields() {
+				return true;
+			}
 		};
 	}
 	protected static SerializationPolicyProvider makeProvider() {
