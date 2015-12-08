@@ -102,6 +102,7 @@ public class ServerCreator {
 		// Collect the types the server will send to the client using the Client interface
 		SerializableTypeOracleBuilder serverSerializerBuilder = new SerializableTypeOracleBuilder(logger, context);
 		appendMethodParameters(logger, clientType, Client.class, serverSerializerBuilder);
+		appendCallbackParameters(logger, this.serverType, Server.class, serverSerializerBuilder);
 		// Also add the wrapper object ClientInvocation
 		serverSerializerBuilder.addRootType(logger, oracle.findType(ClientInvocation.class.getName()));
 		serverSerializerBuilder.addRootType(logger, oracle.findType(ClientCallbackInvocation.class.getName()));
@@ -109,6 +110,7 @@ public class ServerCreator {
 		// Collect the types the client will send to the server using the Server interface
 		SerializableTypeOracleBuilder clientSerializerBuilder = new SerializableTypeOracleBuilder(logger, context);
 		appendMethodParameters(logger, this.serverType, Server.class, clientSerializerBuilder);
+		appendCallbackParameters(logger, clientType, Client.class, clientSerializerBuilder);
 		// Also add the ServerInvocation wrapper
 		clientSerializerBuilder.addRootType(logger, oracle.findType(ServerInvocation.class.getName()));
 		clientSerializerBuilder.addRootType(logger, oracle.findType(ServerCallbackInvocation.class.getName()));
@@ -160,6 +162,7 @@ public class ServerCreator {
 		sw.commit(logger);
 	}
 
+
 	public String getPackageName() {
 		return serverType.getPackage().getName();
 	}
@@ -189,6 +192,25 @@ public class ServerCreator {
 					JParameter param = parameters[i];
 					if (i + 1 != m.getParameters().length || param.getType().isInterface() == null || !param.getType().isInterface().getQualifiedSourceName().equals(Callback.class.getName())) {
 					  serializerBuilder.addRootType(l, param.getType());
+					}
+				}
+			}
+		}
+	}
+
+	private void appendCallbackParameters(TreeLogger logger, JClassType serviceInterface, Class<?> serviceSuperClass, SerializableTypeOracleBuilder serializerBuilder) {
+		TreeLogger l = logger.branch(Type.DEBUG, "Adding callback types to" + serviceInterface.getName());
+		for (JMethod m : serviceInterface.getMethods()) {
+			if (isRemoteMethod(m, serviceSuperClass)) {
+				JParameter[] parameters = m.getParameters();
+				for (int i = 0; i < parameters.length; i++) {
+					JParameter param = parameters[i];
+					if (i + 1 == m.getParameters().length && param.getType().isInterface() != null && param.getType().isInterface().getQualifiedSourceName().equals(Callback.class.getName())) {
+						//read generics from Callback<T, F> and add as root types
+						JClassType t = param.getType().isParameterized().getTypeArgs()[0];
+						JClassType f = param.getType().isParameterized().getTypeArgs()[1];
+						serializerBuilder.addRootType(l, t);
+						serializerBuilder.addRootType(l, f);
 					}
 				}
 			}
