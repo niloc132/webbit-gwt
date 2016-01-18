@@ -16,6 +16,7 @@
 			<artifactId>rpc-client-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+
 		<dependency>
 			<groupId>${gwt.groupId}</groupId>
 			<artifactId>gwt-servlet</artifactId>
