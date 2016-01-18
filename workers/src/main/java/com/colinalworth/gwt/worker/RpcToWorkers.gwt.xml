@@ -1,0 +1,4 @@
+<module>
+	<inherits name="com.colinalworth.gwt.websockets.RpcOverWebSockets" />
+	<inherits name="playn.PlayN"/>
+</module>
