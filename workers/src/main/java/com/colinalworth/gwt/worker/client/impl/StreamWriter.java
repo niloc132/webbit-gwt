@@ -3,12 +3,15 @@ package com.colinalworth.gwt.worker.client.impl;
 import com.colinalworth.gwt.worker.client.pako.Deflate;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArrayMixed;
+import com.google.gwt.typedarrays.shared.ArrayBuffer;
 import com.google.gwt.typedarrays.shared.ArrayBufferView;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamWriter;
 import com.google.gwt.user.client.rpc.impl.Serializer;
 import playn.html.HasArrayBufferView;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.List;
 
@@ -30,18 +33,25 @@ import java.util.List;
  *
  *
  * Basic socket format:
+ * version, flags, payloadLength, payload, stringtableLength, stringtable
+ *
+ * The last two are optional if there are no strings.
  *
  * Now we just have one array instead of two - all strings are gzipped and then concat'd into
  *
  */
 public class StreamWriter extends AbstractSerializationStreamWriter {
-	private IntBuffer payload = IntBuffer.allocate(1024);//initial size 1kb
+	private ByteBuffer bb;//initial size 1kb
+	private IntBuffer payload;
 
 	private final Serializer serializer;
 
 
 	public StreamWriter(Serializer serializer) {
 		this.serializer = serializer;
+		bb = ByteBuffer.allocate(1024);
+		bb.order(ByteOrder.nativeOrder());
+		payload = bb.asIntBuffer();
 		payload.position(3);//leave room for flags, version, size
 	}
 
@@ -52,6 +62,8 @@ public class StreamWriter extends AbstractSerializationStreamWriter {
 		//TODO consider replacing with a List<IntBuffer> and make new ones as needed, then make a big one, or send them all
 //		payload = payload.compact();
 		payload.limit(payload.position());
+		payload.position(0);
+		payload = payload.slice();
 
 		payload.put(0, getFlags());
 		payload.put(1, getVersion());
@@ -67,8 +79,12 @@ public class StreamWriter extends AbstractSerializationStreamWriter {
 	}
 
 	public ArrayBufferView getSocketData() {
-		payload = payload.compact();
+//		payload = payload.compact();
+		payload.limit(payload.position());
+		payload.position(0);
+		payload = payload.slice();
 
+		//TODO don't compress if small enough!
 		Deflate zip = Deflate.create();
 
 		payload.put(0, getFlags());
@@ -76,16 +92,27 @@ public class StreamWriter extends AbstractSerializationStreamWriter {
 		//mark the size of the payload
 		payload.put(2, payload.limit() - 3);
 
-		zip.push(((HasArrayBufferView) payload).getTypedArray(), false);
+		//shift bb to the same offsets as payload, then slice so we have a typed array with the right bounds
+		bb.limit(payload.limit() << 2);
+		bb.position(payload.position() << 2);
+		bb = bb.slice();
 		payload = null;
 
 		List<String> strings = getStringTable();
-		IntBuffer length = IntBuffer.allocate(1);
-		for (int i = 0; i < strings.size(); i++) {
-			String string = strings.get(i);
-			length.put(0, string.length());
-			zip.push(((HasArrayBufferView) length).getTypedArray(), false);
-			zip.push(string, i + 1 == strings.size());
+		ArrayBufferView typedArray = ((HasArrayBufferView) bb).getTypedArray();
+		zip.push(typedArray, strings.isEmpty());
+
+		if (!strings.isEmpty()) {
+			IntBuffer length = IntBuffer.allocate(1);
+			length.put(0, strings.size());
+			ArrayBuffer lengthBuffer = ((HasArrayBufferView) length).getTypedArray().buffer();
+			zip.push(lengthBuffer, false);
+			for (int i = 0; i < strings.size(); i++) {
+				String string = strings.get(i);
+				length.put(0, string.length());
+				zip.push(lengthBuffer, false);
+				zip.push(string, i + 1 == strings.size());
+			}
 		}
 
 		return zip.getResult();

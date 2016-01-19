@@ -9,6 +9,7 @@ import com.google.gwt.user.client.rpc.impl.Serializer;
 import playn.html.TypedArrayHelper;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 
 public class StreamReader extends AbstractSerializationStreamReader {
@@ -31,12 +32,14 @@ public class StreamReader extends AbstractSerializationStreamReader {
 	public StreamReader(Serializer serializer, ArrayBuffer data) {
 		this.serializer = serializer;
 
+		//TODO if StreamWriter might not compress, check that we've got something that can be compressed...
 		//unzip data before continuing
 		Inflate unzip = Inflate.create();
 		unzip.push(data, true);
 		data = unzip.getResult().buffer();
 
 		ByteBuffer byteBuffer = TypedArrayHelper.wrap(data);
+		byteBuffer.order(ByteOrder.nativeOrder());
 		IntBuffer ints = byteBuffer.asIntBuffer();
 		int version = ints.get();
 		int flags = ints.get();
@@ -47,12 +50,17 @@ public class StreamReader extends AbstractSerializationStreamReader {
 		payload.limit(length);
 
 		strings = JsArrayString.createArray().cast();
-		byteBuffer.position(3 + length);
-		while (byteBuffer.hasRemaining()) {
-			int stringLength = byteBuffer.getInt();
-			byte[] bytes = new byte[stringLength];
-			byteBuffer.get(bytes);
-			strings.push(new String(bytes));
+		if (ints.limit() > 3 + length) {//if there is at least one entry after payload
+			int stringsCount = ints.get(3 + length);
+			assert stringsCount >= 0;//shouldn't have written count for zero strings
+			byteBuffer.position((4 + length) << 2);
+
+			for (int i = 0; i < stringsCount; i++) {
+				int stringLength = byteBuffer.getInt();
+				byte[] bytes = new byte[stringLength];
+				byteBuffer.get(bytes);
+				strings.push(new String(bytes));
+			}
 		}
 	}
 

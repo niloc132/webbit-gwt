@@ -7,19 +7,25 @@ import com.google.gwt.typedarrays.shared.ArrayBufferView;
 /**
  * TODO jsinterop
  */
-public class Inflate extends JavaScriptObject {
+public final class Inflate extends JavaScriptObject {
+	protected Inflate() {
+	}
+
 	public static native Inflate create() /*-{
-        return new $wnd.pako.Inflate();
-    }-*/;
+		return new $wnd.pako.Inflate();
+	}-*/;
 
 	public native boolean push(ArrayBuffer array, boolean last) /*-{
-        return this.push(array, last);
-    }-*/;
+		return this.push(array, last);
+	}-*/;
+	public native boolean push(ArrayBufferView array, boolean last) /*-{
+		return this.push(array, last);
+	}-*/;
 	public native boolean push(String string, boolean last) /*-{
-        return this.push(string, last);
-    }-*/;
+		return this.push(string, last);
+	}-*/;
 
 	public native ArrayBufferView getResult() /*-{
 		return this.result;
-	-*/;
+	}-*/;
 }
