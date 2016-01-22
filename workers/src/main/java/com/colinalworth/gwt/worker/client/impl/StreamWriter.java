@@ -95,7 +95,7 @@ public class StreamWriter extends AbstractSerializationStreamWriter {
 		//shift bb to the same offsets as payload, then slice so we have a typed array with the right bounds
 		bb.limit(payload.limit() << 2);
 		bb.position(payload.position() << 2);
-		bb = bb.slice();
+		bb = bb.slice();//http://thecodelesscode.com/case/209
 		payload = null;
 
 		List<String> strings = getStringTable();
