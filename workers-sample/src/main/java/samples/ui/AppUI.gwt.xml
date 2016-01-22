@@ -1,0 +1,6 @@
+<module rename-to="ui">
+	<inherits name="com.google.gwt.user.User" />
+	<inherits name="com.colinalworth.gwt.worker.RpcToWorkers" />
+
+	<entry-point class="samples.ui.client.AppUI" />
+</module>
