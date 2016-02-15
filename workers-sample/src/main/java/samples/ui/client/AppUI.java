@@ -1,6 +1,7 @@
 package samples.ui.client;
 
 import com.colinalworth.gwt.worker.client.WorkerFactory;
+import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -42,6 +43,24 @@ public class AppUI implements EntryPoint {
 			@Override
 			public void onClick(ClickEvent clickEvent) {
 				worker.ping();
+			}
+		}));
+		RootPanel.get().add(new Button("Split", new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent clickEvent) {
+				String result = Window.prompt("Split this text on \",\"", "a,b,c,d");
+				if (result != null) {
+					worker.split(",", result, new Callback<String[], Throwable>() {
+						@Override
+						public void onFailure(Throwable throwable) {
+							Window.alert("failure: " + throwable.getMessage());
+						}
+						@Override
+						public void onSuccess(String[] strings) {
+							Window.alert(strings.length + " items");
+						}
+					});
+				}
 			}
 		}));
 	}
