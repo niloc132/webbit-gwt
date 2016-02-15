@@ -5,5 +5,6 @@ package com.colinalworth.gwt.worker.client;
  */
 public interface Endpoint<LOCAL extends Endpoint<LOCAL, REMOTE>, REMOTE extends Endpoint<REMOTE, LOCAL>> {
 
-	void setLocal(LOCAL local);
+	void setRemote(REMOTE remote);
+	REMOTE getRemote();
 }

@@ -6,10 +6,12 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 /**
  * Created by colin on 1/18/16.
  */
-public class RemoteInvocation implements IsSerializable{
+public class RemoteInvocation implements IsSerializable {
 	private String method;
 	@GwtTransient
 	private Object[] parameters;
+
+	private int callbackId;
 
 	public RemoteInvocation() {
 	}
@@ -17,20 +19,20 @@ public class RemoteInvocation implements IsSerializable{
 	public RemoteInvocation(String method, Object[] params, int callbackId) {
 		this.method = method;
 		this.parameters = params;
-//		this.callbackId = callbackId;
+		this.callbackId = callbackId;
 	}
 
-//	/**
-//	 * Returns the id of the callback on the client that should be invoked when the callback argument is used on the server
-//	 * @return a non-zero value if a callback should be invoked
-//	 */
-//	public int getCallbackId() {
-//		return callbackId;
-//	}
-//
-//	public void setCallbackId(int callbackId) {
-//		this.callbackId = callbackId;
-//	}
+	/**
+	 * Returns the id of the callback on the client that should be invoked when the callback argument is used on the server
+	 * @return a non-zero value if a callback should be invoked
+	 */
+	public int getCallbackId() {
+		return callbackId;
+	}
+
+	public void setCallbackId(int callbackId) {
+		this.callbackId = callbackId;
+	}
 
 	/**
 	 * @return the method

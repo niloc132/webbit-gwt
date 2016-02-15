@@ -103,5 +103,7 @@
 
 		<module>javaee-websocket-gwt-rpc</module>
 		<module>javaee-websocket-gwt-rpc-sample</module>
+		<module>workers</module>
+		<module>workers-sample</module>
 	</modules>
 </project>
