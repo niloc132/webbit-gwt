@@ -118,7 +118,6 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		try {
 			if (object instanceof ClientInvocation) {
 				final ClientInvocation invocation = (ClientInvocation) object;
-				final Object[] args;
 				if (invocation.getCallbackId() != 0) {
 					Callback<?, ?> callback = new Callback<Object, Object>() {
 						private boolean fired = false;
@@ -141,13 +140,10 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 							fired = true;
 						}
 					};
-					args = new Object[invocation.getParameters().length + 1];
-					System.arraycopy(invocation.getParameters(), 0, args, 0, invocation.getParameters().length);
-					args[args.length - 1] = callback;
-				} else {
-					args = invocation.getParameters();
+					//This is only legal in gwt'd java, where object arrays are backed by a js array
+					invocation.getParameters()[invocation.getParameters().length] = callback;
 				}
-				__invoke(invocation.getMethod(), args);
+				__invoke(invocation.getMethod(), invocation.getParameters());
 			} else {
 				assert object instanceof ClientCallbackInvocation;
 				ClientCallbackInvocation callback = (ClientCallbackInvocation) object;

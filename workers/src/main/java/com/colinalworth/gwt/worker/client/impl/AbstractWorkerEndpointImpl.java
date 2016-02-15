@@ -1,19 +1,25 @@
 package com.colinalworth.gwt.worker.client.impl;
 
+import com.colinalworth.gwt.websockets.shared.impl.ServerCallbackInvocation;
 import com.colinalworth.gwt.worker.client.Endpoint;
 import com.colinalworth.gwt.worker.client.worker.MessageEvent;
 import com.colinalworth.gwt.worker.client.worker.MessageEvent.MessageHandler;
 import com.colinalworth.gwt.worker.client.worker.MessagePort;
 import com.google.gwt.core.client.Callback;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JsArrayMixed;
 import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.typedarrays.shared.ArrayBuffer;
 import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamWriter;
+import com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter;
 import com.google.gwt.user.client.rpc.impl.Serializer;
 import playn.html.TypedArrayHelper;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Base implementation of Endpoint
@@ -21,6 +27,10 @@ import java.nio.ByteOrder;
 public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, REMOTE>, REMOTE extends Endpoint<REMOTE, LOCAL>> implements Endpoint<LOCAL, REMOTE> {
 	private final MessagePort worker;
 	private REMOTE remote;
+
+	private int nextCallbackId = 1;
+	private Map<Integer, Callback<?,?>> callbacks = new HashMap<Integer, Callback<?, ?>>();
+
 
 	protected AbstractWorkerEndpointImpl(MessagePort worker) {
 		this.worker = worker;
@@ -53,6 +63,7 @@ public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, R
 		__checkLocal();
 		//message is two parts, payload and strings
 		JsArrayMixed data = message.getData();
+		//noinspection RedundantCast: gwt 2.7 bug, resolved in 2.8
 		ArrayBuffer payload = (ArrayBuffer) data.getObject(0);
 		ByteBuffer byteBuffer = TypedArrayHelper.wrap(payload);
 		byteBuffer.order(ByteOrder.nativeOrder());
@@ -63,17 +74,42 @@ public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, R
 
 		try {
 			if (object instanceof RemoteInvocation) {
-				RemoteInvocation invocation = (RemoteInvocation) object;
+				final RemoteInvocation invocation = (RemoteInvocation) object;
 				//TODO handle passed callback
+				if (invocation.getCallbackId() != 0) {
+					Callback<?, ?> callback = new Callback<Object, Object>() {
+						private boolean fired = false;
+						@Override
+						public void onFailure(Object reason) {
+							checkFired();
+							__sendCallback(invocation.getCallbackId(), reason, false);
+						}
+
+						@Override
+						public void onSuccess(Object result) {
+							checkFired();
+							__sendCallback(invocation.getCallbackId(), result, true);
+						}
+
+						private void checkFired() {
+							if (fired) {
+								throw new IllegalStateException("Callback already used, cannot be used again.");
+							}
+							fired = true;
+						}
+					};
+					//This is only legal in gwt'd java, where object arrays are backed by a js array
+					invocation.getParameters()[invocation.getParameters().length] = callback;
+				}
 
 				__invoke(invocation.getMethod(), invocation.getParameters());
 
 
 				//TODO handle responding callback
-//			} else {
-//				assert object instanceof RemoteCallbackInvocation;
-//				RemoteCallbackInvocation callback = (RemoteCallbackInvocation) object;
-//				__callback(callback.getCallbackId(), callback.getResponse(), callback.isSuccess());
+			} else {
+				assert object instanceof RemoteCallbackInvocation;
+				RemoteCallbackInvocation callback = (RemoteCallbackInvocation) object;
+				__callback(callback.getCallbackId(), callback.getResponse(), callback.isSuccess());
 
 			}
 		} catch (Exception ex) {
@@ -81,9 +117,43 @@ public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, R
 		}
 	}
 
-	protected void __sendMessage(String methodName, Callback<?, ?> callback, Object... params) {
+	private void __sendCallback(int callbackId, Object response, boolean isSuccess) {
+		RemoteCallbackInvocation callbackInvoke = new RemoteCallbackInvocation(callbackId, response, isSuccess);
 
-		RemoteInvocation invoke = new RemoteInvocation(methodName, params, 0);
+		StreamWriter writer = new StreamWriter(__getSerializer());
+
+		try {
+			writer.writeObject(callbackInvoke);
+
+			JsArrayMixed workerData = writer.getWorkerData();
+			//noinspection RedundantCast: gwt 2.7 bug, resolved in 2.8
+			ArrayBuffer buffer = (ArrayBuffer) workerData.getObject(0);
+			worker.postMessage(workerData, buffer);
+		} catch (SerializationException e) {
+			//TODO report, rethrow
+		}
+	}
+
+	private void __callback(int callbackId, Object response, boolean success) {
+		if (callbacks.containsKey(callbackId)) {
+			@SuppressWarnings("unchecked") Callback<Object, Object> c = (Callback<Object, Object>) callbacks.remove(callbackId);
+			if (success) {
+				c.onSuccess(response);
+			} else {
+				c.onFailure(response);
+			}
+		}
+	}
+
+	protected void __sendMessage(String methodName, Callback<?, ?> callback, Object... params) {
+		final int callbackId;
+		if (callback != null) {
+			callbackId = nextCallbackId++;
+			callbacks.put(callbackId, callback);
+		} else {
+			callbackId = 0;
+		}
+		RemoteInvocation invoke = new RemoteInvocation(methodName, params, callbackId);
 
 		StreamWriter writer = new StreamWriter(__getSerializer());
 
@@ -91,7 +161,8 @@ public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, R
 			writer.writeObject(invoke);
 
 			JsArrayMixed workerData = writer.getWorkerData();
-			ArrayBuffer buffer = workerData.getObject(0);
+			//noinspection RedundantCast: gwt 2.7 bug, resolved in 2.8
+			ArrayBuffer buffer = (ArrayBuffer) workerData.getObject(0);
 			worker.postMessage(workerData, buffer);
 		} catch (SerializationException e) {
 			//TODO report, rethrow

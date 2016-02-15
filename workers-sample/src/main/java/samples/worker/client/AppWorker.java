@@ -2,6 +2,7 @@ package samples.worker.client;
 
 import com.colinalworth.gwt.worker.client.WorkerFactory;
 import com.colinalworth.gwt.worker.client.worker.MessagePort;
+import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import samples.shared.client.MyHost;
@@ -22,6 +23,15 @@ public class AppWorker implements EntryPoint {
 			@Override
 			public void ping() {
 				getRemote().pong();
+			}
+
+			@Override
+			public void split(String pattern, String input, Callback<String[], Throwable> callback) {
+				try {
+					callback.onSuccess(input.split(pattern));
+				} catch (Exception e) {
+					callback.onFailure(e);
+				}
 			}
 
 			private MyHost remote;
