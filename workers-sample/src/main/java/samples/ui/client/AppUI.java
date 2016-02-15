@@ -1,8 +1,6 @@
 package samples.ui.client;
 
-import com.colinalworth.gwt.worker.client.worker.MessageEvent;
-import com.colinalworth.gwt.worker.client.worker.MessageEvent.MessageHandler;
-import com.colinalworth.gwt.worker.client.worker.Worker;
+import com.colinalworth.gwt.worker.client.WorkerFactory;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -10,25 +8,42 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.RootPanel;
+import samples.shared.client.MyHost;
+import samples.shared.client.MyWorker;
 
 public class AppUI implements EntryPoint {
-	Worker worker;
+	public interface Factory extends WorkerFactory<MyWorker, MyHost> {}
+
 	@Override
 	public void onModuleLoad() {
-		worker = Worker.child(GWT.getModuleBaseForStaticFiles() + "../worker/worker.js");
+		Factory factory = GWT.create(Factory.class);//new GeneratedWorkerFactory();
+
+		final MyWorker worker = factory.createDedicatedWorker(GWT.getModuleBaseForStaticFiles() + "../worker/worker.js", new MyHost() {
+			private MyWorker remote;
+
+			@Override
+			public void setRemote(MyWorker myWorker) {
+				this.remote = myWorker;
+			}
+
+			@Override
+			public MyWorker getRemote() {
+				return remote;
+			}
+
+			@Override
+			public void pong() {
+				Window.alert("pong");
+			}
+		});
+
 
 		RootPanel.get().add(new Button("Ping", new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent clickEvent) {
-				worker.postMessage("ping");
+				worker.ping();
 			}
 		}));
-
-		worker.addMessageHandler(new MessageHandler() {
-			@Override
-			public void onMessage(MessageEvent event) {
-				Window.alert(event.getData().toString());
-			}
-		});
 	}
+
 }

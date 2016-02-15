@@ -4,6 +4,7 @@ import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.junit.client.GWTTestCase;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,30 +24,45 @@ public class BrokenGwtTestEndpoint extends GWTTestCase {
 
 		void split(String input, String pattern, Callback<List<String>, Throwable> callback);
 	}
-	public interface MyWorkerFactory extends WorkerFactory<MyWorker> {
+	public interface MyWorkerFactory extends WorkerFactory<MyWorker, MyHost> {
 		MyWorkerFactory instance = GWT.create(WorkerFactory.class);
 	}
 
 
 	public void testSimpleEndpoint() {
-		MyWorker worker = MyWorkerFactory.instance.createDedicatedWorker("simpleWorker.js");
-
 		delayTestFinish(1000);
 
-		worker.setLocal(new MyWorker() {
+		MyWorker worker = MyWorkerFactory.instance.createDedicatedWorker("simpleWorker.js", new MyHost() {
 			@Override
-			public void pong() {
+			public void ping() {
+				remote.pong();
+			}
 
+			private MyWorker remote;
+			@Override
+			public void setRemote(MyWorker myWorker) {
+				remote = myWorker;
+				remote.split("a,b,c", ",", new Callback<List<String>, Throwable>() {
+					@Override
+					public void onFailure(Throwable throwable) {
+						fail(throwable.getMessage());
+					}
+
+					@Override
+					public void onSuccess(List<String> strings) {
+						List<String> expected = new ArrayList<String>();
+						expected.add("a");
+						expected.add("b");
+						expected.add("c");
+						assertEquals(expected, strings);
+						finishTest();
+					}
+				});
 			}
 
 			@Override
-			public void split(String input, String pattern, Callback<List<String>, Throwable> callback) {
-
-			}
-
-			@Override
-			public void setLocal(MyWorker myWorker) {
-
+			public MyWorker getRemote() {
+				return remote;
 			}
 		});
 	}

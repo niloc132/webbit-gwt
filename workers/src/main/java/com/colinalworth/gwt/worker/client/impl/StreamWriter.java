@@ -121,6 +121,9 @@ public class StreamWriter extends AbstractSerializationStreamWriter {
 	private native JavaScriptObject jso(Object jso) /*-{
 		return jso;
 	}-*/;
+	private native JavaScriptObject jso(Object[] jso) /*-{
+		return jso.slice();//rebuild the array but without gwt's bookkeeping properties
+	}-*/;
 
 	@Override
 	public String toString() {

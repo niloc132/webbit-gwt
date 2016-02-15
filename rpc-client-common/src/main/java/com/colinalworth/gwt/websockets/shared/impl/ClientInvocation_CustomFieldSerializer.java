@@ -52,7 +52,9 @@ public class ClientInvocation_CustomFieldSerializer extends CustomFieldSerialize
 			streamWriter.writeInt(0);
 		} else {
 			streamWriter.writeInt(instance.getParameters().length);
-			for (Object param : instance.getParameters()) {
+			Object[] parameters = instance.getParameters();
+			for (int i = 0; i < parameters.length; i++) {
+				Object param = parameters[i];
 				streamWriter.writeObject(param);
 			}
 		}

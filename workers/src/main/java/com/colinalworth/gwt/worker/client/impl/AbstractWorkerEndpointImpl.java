@@ -4,7 +4,7 @@ import com.colinalworth.gwt.worker.client.Endpoint;
 import com.colinalworth.gwt.worker.client.worker.MessageEvent;
 import com.colinalworth.gwt.worker.client.worker.MessageEvent.MessageHandler;
 import com.colinalworth.gwt.worker.client.worker.MessagePort;
-import com.colinalworth.gwt.worker.client.worker.Worker;
+import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.JsArrayMixed;
 import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.typedarrays.shared.ArrayBuffer;
@@ -20,9 +20,9 @@ import java.nio.ByteOrder;
  */
 public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, REMOTE>, REMOTE extends Endpoint<REMOTE, LOCAL>> implements Endpoint<LOCAL, REMOTE> {
 	private final MessagePort worker;
-	private LOCAL local;
+	private REMOTE remote;
 
-	protected AbstractWorkerEndpointImpl(Worker worker) {
+	protected AbstractWorkerEndpointImpl(MessagePort worker) {
 		this.worker = worker;
 		worker.addMessageHandler(new MessageHandler() {
 			@Override
@@ -37,12 +37,13 @@ public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, R
 	}
 
 	@Override
-	public void setLocal(LOCAL local) {
-		this.local = local;
+	public void setRemote(REMOTE remote) {
+		this.remote = remote;
 	}
 
-	public LOCAL getLocal() {
-		return local;
+	@Override
+	public REMOTE getRemote() {
+		return remote;
 	}
 
 	protected abstract Serializer __getSerializer();
@@ -52,7 +53,7 @@ public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, R
 		__checkLocal();
 		//message is two parts, payload and strings
 		JsArrayMixed data = message.getData();
-		ArrayBuffer payload = data.getObject(0);
+		ArrayBuffer payload = (ArrayBuffer) data.getObject(0);
 		ByteBuffer byteBuffer = TypedArrayHelper.wrap(payload);
 		byteBuffer.order(ByteOrder.nativeOrder());
 		JsArrayString strings = data.getObject(1);
@@ -80,7 +81,7 @@ public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, R
 		}
 	}
 
-	protected void __sendMessage(String methodName, Object... params) {
+	protected void __sendMessage(String methodName, Callback<?, ?> callback, Object... params) {
 
 		RemoteInvocation invoke = new RemoteInvocation(methodName, params, 0);
 
