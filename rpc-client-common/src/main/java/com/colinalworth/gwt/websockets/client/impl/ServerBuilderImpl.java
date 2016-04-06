@@ -7,14 +7,17 @@ import com.google.gwt.user.client.Window;
 
 public abstract class ServerBuilderImpl<S extends Server<S, ?>> implements ServerBuilder<S> {
 	private String url;
-	private UrlBuilder urlBuilder = Window.Location.createUrlBuilder();
+	private UrlBuilder urlBuilder;
 	private ConnectionErrorHandler errorHandler;
 
 	/**
 	 *
 	 */
 	public ServerBuilderImpl() {
-		urlBuilder.setProtocol("https".equals(Window.Location.getProtocol()) ? "wss": "ws").setHash(null);
+		urlBuilder = new UrlBuilder();
+		urlBuilder.setProtocol("https".equals(Window.Location.getProtocol()) ? "wss": "ws");
+      		urlBuilder.setHost(Window.Location.getHost());
+		urlBuilder.setPath(Window.Location.getPath());
 	}
 
 	@Override
