@@ -14,7 +14,7 @@ public abstract class ServerBuilderImpl<S extends Server<S, ?>> implements Serve
 	 *
 	 */
 	public ServerBuilderImpl() {
-		urlBuilder.setProtocol("https".equals(Window.Location.getProtocol()) ? "wss": "ws").setHash(null);
+		urlBuilder.setProtocol(Window.Location.getProtocol().startsWith("https") ? "wss": "ws").setHash(null);
 	}
 
 	@Override
