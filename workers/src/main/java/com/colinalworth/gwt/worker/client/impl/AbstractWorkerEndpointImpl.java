@@ -1,18 +1,14 @@
 package com.colinalworth.gwt.worker.client.impl;
 
-import com.colinalworth.gwt.websockets.shared.impl.ServerCallbackInvocation;
 import com.colinalworth.gwt.worker.client.Endpoint;
 import com.colinalworth.gwt.worker.client.worker.MessageEvent;
 import com.colinalworth.gwt.worker.client.worker.MessageEvent.MessageHandler;
 import com.colinalworth.gwt.worker.client.worker.MessagePort;
 import com.google.gwt.core.client.Callback;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JsArrayMixed;
 import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.typedarrays.shared.ArrayBuffer;
 import com.google.gwt.user.client.rpc.SerializationException;
-import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamWriter;
-import com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter;
 import com.google.gwt.user.client.rpc.impl.Serializer;
 import playn.html.TypedArrayHelper;
 
