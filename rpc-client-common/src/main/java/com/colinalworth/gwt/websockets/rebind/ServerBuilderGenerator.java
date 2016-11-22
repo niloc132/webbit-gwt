@@ -18,6 +18,7 @@ package com.colinalworth.gwt.websockets.rebind;
 
 import com.colinalworth.gwt.websockets.client.ServerBuilder;
 import com.colinalworth.gwt.websockets.client.impl.ServerBuilderImpl;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.ext.Generator;
 import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.TreeLogger;
@@ -74,7 +75,7 @@ public class ServerBuilderGenerator extends Generator {
 		RemoteServiceRelativePath path = serverImplType.getAnnotation(RemoteServiceRelativePath.class);
 		if (path != null) {
 			sw.println("public %1$s() {", simpleName);
-			sw.indentln("setPath(\"%1$s\");", path.value());
+			sw.indentln("super(%1$s.getModuleBaseURL(), \"%2$s\");", GWT.class.getName(), path.value());
 			sw.println("}");
 		}
 

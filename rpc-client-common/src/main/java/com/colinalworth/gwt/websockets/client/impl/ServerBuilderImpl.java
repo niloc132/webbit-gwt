@@ -13,8 +13,19 @@ public abstract class ServerBuilderImpl<S extends Server<S, ?>> implements Serve
 	/**
 	 *
 	 */
-	public ServerBuilderImpl() {
+	public ServerBuilderImpl(String moduleBaseURL, String remoteServiceRelativePath) {
 		urlBuilder.setProtocol(Window.Location.getProtocol().startsWith("https") ? "wss": "ws").setHash(null);
+
+		if (remoteServiceRelativePath != null) {
+			/*
+			 * If the module relative URL is not null we set the remote service URL to
+			 * be the module base URL plus the module relative remote service URL.
+			 * Otherwise an explicit call to
+			 * ServerBuilder.setPath(String) or setUrl(String) is required.
+			 */
+			setPath(moduleBaseURL + remoteServiceRelativePath);
+		}
+
 	}
 
 	@Override
