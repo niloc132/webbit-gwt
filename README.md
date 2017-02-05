@@ -17,12 +17,13 @@ Note however that callbacks are often not required - messages can be passed with
 Note also that callbacks are one-time use, and cannot be invoked multiple times - use a different method
 on the opposite interface to achieve that effect.
 
-Two server implementations are supported - Webbit (a Netty-based websocket server), and
-[JSR-356](https://www.jcp.org/en/jsr/detail?id=356) (the spec for javax.websocket, implemented by
-[Glassfish](https://tyrus.java.net/),
+[JSR-356](https://www.jcp.org/en/jsr/detail?id=356) is used presently as the only server-side implementation
+(the spec for javax.websocket, implemented by [Glassfish](https://tyrus.java.net/),
 [Jetty](http://www.eclipse.org/jetty/documentation/current/jetty-javaee.html#jetty-javaee-7), and
 [Tomcat](tomcat.apache.org/tomcat-7.0-doc/web-socket-howto.html)). The library uses version 1.0 of this
-API, as Jetty (and perhaps others) do not yet support 1.1.
+API, as Jetty (and perhaps others) do not yet support 1.1. 
+
+A new project has also been started adding rpc-like communication between web/shared/service workers.
 
 
 ## Example
@@ -124,7 +125,7 @@ The `AbstractClientImpl` class can serve as a handy base class, providing defaul
 ### Server Wiring
 
 With either API there is an `AbstractServerImpl` class. This provides the working details of the `Server`
-interface as well as the specifics how to interact with either Webbit or JSR-356.
+interface as well as the specifics how to interact with JSR-356.
 
 From within either client or server implementation, you can always get a reference to the other side - the
 server can call `getClient()`, and the client already has an instance (see below). Our ChatServerImpl
@@ -164,28 +165,3 @@ of `AbstractServerImpl`).
 
 Check out the [javaee-websocket-gwt-rpc-sample](javaee-websocket-gwt-rpc-sample/) project for a working,
 runnable example of the above code.
-
-### Webbit
-In the server must create an instance implementing its own interface, though it must also establish the
-rest of the server. In this example, we have a `main()` method that starts the app and host both an http
-server as well as a websocket server:
-
-    	public static void main(String[] args) throws IOException {
-    		//start a webserver on port 9876...
-    		WebServer webServer = WebServers.createWebServer(9876)
-    		//...with some local resources (see webbit docs for details)...
-    		.add(new EmbeddedResourceHandler("static"))
-    		//...and a url that can be connected to via websockets
-    		.add("/chat", new GwtWebService<ChatServer,ChatClient>(new ChatServerImpl(), ChatClient.class))
-    		.start();
-
-    		System.out.println("Chat room running on: " + webServer.getUri());
-    	}
-
-The `GwtWebServer` instance is the websocket wiring - the `ChatServerImpl` is an implementation of the
-`ChatServer` interface. As above, there is a `AbstractServerImpl` class to provide some of the basics in
-a server implementation, looking after the currently active connection in the thread, and providing
-default no-op implementations to make getting started easier.
-
-Check out the [webbit-gwt-rpc-sample](webbit-gwt-rpc-sample/) project for a working, runnable example of
-the above code.

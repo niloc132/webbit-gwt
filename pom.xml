@@ -98,11 +98,9 @@
 	<modules>
 		<module>rpc-client-common</module>
 
-		<module>webbit-gwt-rpc</module>
-		<module>webbit-gwt-rpc-sample</module>
-
 		<module>javaee-websocket-gwt-rpc</module>
 		<module>javaee-websocket-gwt-rpc-sample</module>
+
 		<module>workers</module>
 		<module>workers-sample</module>
 	</modules>
