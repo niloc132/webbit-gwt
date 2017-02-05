@@ -1,46 +1,67 @@
 package com.colinalworth.gwt.websockets.client.impl;
 
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.typedarrays.shared.ArrayBuffer;
+import com.google.gwt.typedarrays.shared.ArrayBufferView;
+import com.google.gwt.user.client.Event;
+import jsinterop.annotations.JsFunction;
+import jsinterop.annotations.JsPackage;
+import jsinterop.annotations.JsType;
 
 /**
  * Simple JSO wrapper the WebSocket object.
  *
  */
-public class WebSocket extends JavaScriptObject {
-	protected WebSocket() {
-		// jso protected ctor
-	}
-	public interface Callback {
-		void onOpen(JavaScriptObject event);
-		void onClose(JavaScriptObject event);
-		void onMessage(String data);
-		void onError(JavaScriptObject error);
-	}
+@JsType(isNative = true, namespace = JsPackage.GLOBAL)
+public class WebSocket {
 
-	public static native WebSocket create(String url, Callback callback) /*-{
-      var ws = (!!$wnd.WebSocket) ? new $wnd.WebSocket(url) : $wnd.MozWebSocket(url);
-      ws.onopen = $entry(function(e){callback.@com.colinalworth.gwt.websockets.client.impl.WebSocket.Callback::onOpen(*)(e)});
-      ws.onclose = $entry(function(e){callback.@com.colinalworth.gwt.websockets.client.impl.WebSocket.Callback::onClose(*)(e)});
-      ws.onmessage = $entry(function(e) {
-          callback.@com.colinalworth.gwt.websockets.client.impl.WebSocket.Callback::onMessage(Ljava/lang/String;)(e.data);
-      });
-      ws.onerror = $entry(function(e){callback.@com.colinalworth.gwt.websockets.client.impl.WebSocket.Callback::onError(*)(e)});
-      return ws;
-  }-*/;
+    public static int CLOSED;
+    public static int CLOSING;
+    public static int CONNECTING;
+    public static int OPEN;
 
-	/**
-	 *
-	 * @param message serialized data to send to the server
-	 */
-	public native final void sendMessage(String message) /*-{
-      try {
-          this.send(message);
-      } catch (e) {
-          this.onerror(e);
-      }
-  }-*/;
+    public String binaryType;
+    public int bufferedAmount;
+    public OnCloseCallback onclose;
+    public OnMessageCallback onmessage;
+    public OnOpenCallback onopen;
+    public OnErrorCallback onerror;
+    public int readyState;
+    public String url;
 
-	public native final void close() /*-{
-      this.close();
-  }-*/;
+    public WebSocket(String url) {
+    }
+
+    public native boolean send(ArrayBufferView data);
+
+    public native boolean send(String data);
+
+    public native boolean send(ArrayBuffer data);
+
+	public native void close();
+
+    @JsFunction
+    public interface OnCloseCallback {
+        void onClose(Event a);
+
+    }
+    @JsFunction
+    public interface OnMessageCallback<T> {
+        void onMessage(MessageEvent<T> a);
+
+    }
+    @JsFunction
+    public interface OnOpenCallback {
+        void onOpen(Event a);
+    }
+
+    @JsFunction
+    public interface OnErrorCallback {
+        void onError(JavaScriptObject error);
+    }
+
+    @JsType(isNative = true, namespace = JsPackage.GLOBAL)
+    public static class MessageEvent<T> {
+        public T data;
+    }
 }

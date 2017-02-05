@@ -52,41 +52,40 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 	 */
 	public ServerImpl(final ServerBuilder.ConnectionErrorHandler errorHandler, String url) {
 		this.errorHandler = errorHandler;
-		connection = WebSocket.create(url, new WebSocket.Callback() {
-			@Override
-			public void onOpen(JavaScriptObject event) {
-				C client = __checkClient();
-				if (client != null) {
-					client.onOpen();
-				}
+		connection = new WebSocket(url);
+		connection.binaryType = "arraybuffer";
+
+		connection.onopen = e -> {
+			C client = __checkClient();
+			if (client != null) {
+				client.onOpen();
 			}
-			@Override
-			public void onClose(JavaScriptObject event) {
-				C client = __checkClient();
-				if (client != null) {
-					client.onClose();
-				}
+		};
+		connection.onclose = e -> {
+			C client = __checkClient();
+			if (client != null) {
+				client.onClose();
 			}
-			@Override
-			public void onMessage(String data) {
-				try {
-					ServerImpl.this.__onMessage(data);
-				} catch (Exception e) {
-					onError(e);
-				}
-			}
-			private void onError(Exception e) {
-				if (errorHandler != null) {
-					errorHandler.onError(e);
+		};
+		connection.onmessage = e -> {
+			try {
+				if (e.data instanceof String) {
+					ServerImpl.this.__onMessage((String) e.data);
 				} else {
-					GWT.log("A transport error occurred - pass a error handler to your server builder to handle this yourself", e);
+					//arraybuffer
+					//TODO
 				}
+			} catch (Exception ex) {
+				onError(ex);
 			}
-			@Override
-			public void onError(JavaScriptObject error) {
-				onError(new JavaScriptException(error));
+		};
+		connection.onerror = e -> {
+			if (errorHandler != null) {
+				errorHandler.onError(new JavaScriptException(e));
+			} else {
+				GWT.log("A transport error occurred - pass a error handler to your server builder to handle this yourself", new JavaScriptException(e));
 			}
-		});
+		};
 	}
 
 	public ServerImpl(ServerBuilder.ConnectionErrorHandler errorHandler, String protocol, String server, String path) {
@@ -172,7 +171,7 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 			writer.writeObject(callbackInvoke);
 
 			// send the message over the wire
-			__getConnection().sendMessage(writer.toString());
+			__getConnection().send(writer.toString());
 		} catch (SerializationException e) {
 			// report the error, then throw an exception. This is too important of an error to
 			// let it be ignored
@@ -217,7 +216,7 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 			writer.writeObject(invoke);
 
 			// send the message over the wire
-			__getConnection().sendMessage(writer.toString());
+			__getConnection().send(writer.toString());
 		} catch (SerializationException e) {
 			// report the error, then throw an exception. This is too important of an error to
 			// let it be ignored
