@@ -12,6 +12,7 @@ import playn.html.HasArrayBufferView;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.List;
 
@@ -41,6 +42,13 @@ import java.util.List;
  *
  */
 public class StreamWriter extends AbstractSerializationStreamWriter {
+	//constants from BigLongLibBase for long->int[] conversion
+	protected static final int BITS = 22;
+	protected static final int BITS01 = 2 * BITS;
+	protected static final int BITS2 = 64 - BITS01;
+	protected static final int MASK = (1 << BITS) - 1;
+	protected static final int MASK_2 = (1 << BITS2) - 1;
+
 	private ByteBuffer bb;//initial size 1kb
 	private IntBuffer payload;
 
@@ -49,7 +57,7 @@ public class StreamWriter extends AbstractSerializationStreamWriter {
 
 	public StreamWriter(Serializer serializer) {
 		this.serializer = serializer;
-		bb = ByteBuffer.allocate(1024);
+		bb = ByteBuffer.allocate(8 << 2);
 		bb.order(ByteOrder.nativeOrder());
 		payload = bb.asIntBuffer();
 		payload.position(3);//leave room for flags, version, size
@@ -132,17 +140,24 @@ public class StreamWriter extends AbstractSerializationStreamWriter {
 
 	@Override
 	public void writeLong(long l) {
-		//TODO
+		//impl from BigLongLibBase
+		int[] a = new int[3];
+		a[0] = (int) (l & MASK);
+		a[1] = (int) ((l >> BITS) & MASK);
+		a[2] = (int) ((l >> BITS01) & MASK_2);
+		writeInt(a[0]);
+		writeInt(a[1]);
+		writeInt(a[2]);
 		assert false : "longs not yet implemented";
 	}
 
 	public void writeBoolean(boolean fieldValue) {
-		writeInt(fieldValue ? 1 : 0);
+		writeInt(fieldValue ? 1 : 0);//wasteful, but no need to try to pack this way
 	}
 
 	@Override
 	public void writeByte(byte fieldValue) {
-		writeInt(fieldValue);
+		writeInt(fieldValue);//wasteful, but no need to try to pack this way
 	}
 
 	@Override
@@ -152,23 +167,31 @@ public class StreamWriter extends AbstractSerializationStreamWriter {
 
 	@Override
 	public void writeFloat(float fieldValue) {
-		super.writeFloat(fieldValue);
+		maybeGrow();
+		bb.asFloatBuffer().put(payload.position(), fieldValue);
+		payload.position(payload.position() + 1);
 	}
 
 	@Override
 	public void writeDouble(double fieldValue) {
-		//TODO
-		assert false : "doubles not yet implemented";
+		writeLong(Double.doubleToLongBits(fieldValue));
 	}
 
 	@Override
 	public void writeInt(int fieldValue) {
-		if (!payload.hasRemaining()) {
-			IntBuffer old = payload;
-			payload = IntBuffer.allocate(old.capacity() * 2);
-			payload.put(old);
-		}
+		maybeGrow();
 		payload.put(fieldValue);
+	}
+
+	private void maybeGrow() {
+		if (!payload.hasRemaining()) {
+			ByteBuffer old = bb;
+			bb = ByteBuffer.allocate(old.capacity() * 2);
+			bb.order(ByteOrder.nativeOrder());
+			IntBuffer oldPayload = payload;
+			payload = bb.asIntBuffer();
+			payload.put((IntBuffer)oldPayload.flip());
+		}
 	}
 
 	@Override

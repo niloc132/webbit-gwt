@@ -64,7 +64,7 @@ public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, R
 		ByteBuffer byteBuffer = TypedArrayHelper.wrap(payload);
 		byteBuffer.order(ByteOrder.nativeOrder());
 		JsArrayString strings = data.getObject(1);
-		StreamReader reader = new StreamReader(__getSerializer(), byteBuffer.asIntBuffer(), strings);
+		StreamReader reader = new StreamReader(__getSerializer(), byteBuffer, strings);
 
 		Object object = reader.readObject();
 

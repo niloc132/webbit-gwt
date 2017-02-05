@@ -14,12 +14,14 @@ import java.nio.IntBuffer;
 
 public class StreamReader extends AbstractSerializationStreamReader {
 	private final Serializer serializer;//b
+	private final ByteBuffer bb;
 	private final IntBuffer payload;
 	private final JsArrayString strings;
 
-	public StreamReader(Serializer serializer, IntBuffer payload, JsArrayString strings) {
+	public StreamReader(Serializer serializer, ByteBuffer bb, JsArrayString strings) {
 		this.serializer = serializer;
-		this.payload = payload;
+		this.bb = bb;
+		this.payload = bb.asIntBuffer();
 		this.strings = strings;
 		int version = payload.get();
 		int flags = payload.get();
@@ -38,9 +40,9 @@ public class StreamReader extends AbstractSerializationStreamReader {
 		unzip.push(data, true);
 		data = unzip.getResult().buffer();
 
-		ByteBuffer byteBuffer = TypedArrayHelper.wrap(data);
-		byteBuffer.order(ByteOrder.nativeOrder());
-		IntBuffer ints = byteBuffer.asIntBuffer();
+		bb = TypedArrayHelper.wrap(data);
+		bb.order(ByteOrder.nativeOrder());
+		IntBuffer ints = bb.asIntBuffer();
 		int version = ints.get();
 		int flags = ints.get();
 		int length = ints.get();
@@ -53,15 +55,16 @@ public class StreamReader extends AbstractSerializationStreamReader {
 		if (ints.limit() > 3 + length) {//if there is at least one entry after payload
 			int stringsCount = ints.get(3 + length);
 			assert stringsCount >= 0;//shouldn't have written count for zero strings
-			byteBuffer.position((4 + length) << 2);
+			bb.position((4 + length) << 2);
 
 			for (int i = 0; i < stringsCount; i++) {
-				int stringLength = byteBuffer.getInt();
+				int stringLength = bb.getInt();
 				byte[] bytes = new byte[stringLength];
-				byteBuffer.get(bytes);
+				bb.get(bytes);
 				strings.push(new String(bytes));
 			}
 		}
+		bb.position(3 << 2);
 	}
 
 	@Override
@@ -100,14 +103,15 @@ public class StreamReader extends AbstractSerializationStreamReader {
 
 	@Override
 	public double readDouble() throws SerializationException {
-		assert false : "doubles not yet implemented";
-		return 0;
+		return Double.longBitsToDouble(readLong());
 	}
 
 	@Override
 	public float readFloat() throws SerializationException {
-		assert false : "floats not yet implemented";
-		return 0;
+
+		int position = payload.position();
+		payload.position(position + 1);
+		return bb.asFloatBuffer().get(position);
 	}
 
 	@Override
@@ -117,8 +121,14 @@ public class StreamReader extends AbstractSerializationStreamReader {
 
 	@Override
 	public long readLong() throws SerializationException {
-		assert false : "longs not yet implemented";
-		return 0;
+		int[] a = new int[3];
+		a[0] = readInt();
+		a[1] = readInt();
+		a[2] = readInt();
+		assert a[0] == (a[0] & StreamWriter.MASK);
+		assert a[1] == (a[1] & StreamWriter.MASK);
+		assert a[2] == (a[2] & StreamWriter.MASK_2);
+		return (long) a[0] + ((long) a[1] << (long) StreamWriter.BITS) + ((long) a[2] << (long) StreamWriter.BITS01);
 	}
 
 	@Override
