@@ -85,7 +85,7 @@ public class StreamWriter extends AbstractSerializationStreamWriter {
 		payload = payload.slice();
 
 		//TODO don't compress if small enough!
-		Deflate zip = Deflate.create();
+		Deflate zip = new Deflate();
 
 		payload.put(0, getFlags());
 		payload.put(1, getVersion());

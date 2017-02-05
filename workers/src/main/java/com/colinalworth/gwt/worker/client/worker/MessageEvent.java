@@ -1,25 +1,24 @@
 package com.colinalworth.gwt.worker.client.worker;
 
-import com.google.gwt.core.client.JavaScriptObject;
+import jsinterop.annotations.JsFunction;
+import jsinterop.annotations.JsPackage;
+import jsinterop.annotations.JsProperty;
+import jsinterop.annotations.JsType;
 
-public final class MessageEvent extends JavaScriptObject {
+@JsType(isNative = true, namespace = JsPackage.GLOBAL)
+public class MessageEvent {
 
+	@JsProperty
+	public native <T> T getData();
 
-	protected MessageEvent() {
-	}
-
-	public native <T> T getData() /*-{
-		return this.data;
-	}-*/;
-
-	public native String getOrigin() /*-{
-		return this.origin;
-	}-*/;
+	@JsProperty
+	public native String getOrigin();
 
 	//ports
 
 	//source
 
+	@JsFunction
 	public interface MessageHandler {
 		void onMessage(MessageEvent event);
 	}

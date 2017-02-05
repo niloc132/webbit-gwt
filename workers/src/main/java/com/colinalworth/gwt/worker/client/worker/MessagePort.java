@@ -1,47 +1,28 @@
 package com.colinalworth.gwt.worker.client.worker;
 
 import com.colinalworth.gwt.worker.client.worker.MessageEvent.MessageHandler;
-import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.typedarrays.shared.ArrayBuffer;
+import jsinterop.annotations.JsOverlay;
+import jsinterop.annotations.JsPackage;
+import jsinterop.annotations.JsType;
 
 /**
  * Created by colin on 1/18/16.
  */
-public class MessagePort extends JavaScriptObject {
+@JsType(isNative = true, namespace = JsPackage.GLOBAL)
+public class MessagePort {
 
-	protected MessagePort() {
+	public final native void postMessage(Object jso, ArrayBuffer[] buffers);
+
+	public native void start();
+
+	public native void close();
+
+	@JsOverlay
+	public final void addMessageHandler(MessageHandler handler) {
+		addEventListener("message", handler);
 	}
 
-	public final native void postMessage(String str) /*-{
-		this.postMessage(str);
-	}-*/;
-
-	public final native void postMessage(JavaScriptObject jso) /*-{
-		this.postMessage(jso);
-	}-*/;
-
-	public final native void postMessage(JavaScriptObject jso, ArrayBuffer buffer) /*-{
-		this.postMessage(jso, [buffer]);
-	}-*/;
-
-	public final native void postMessage(JavaScriptObject jso, ArrayBuffer... buffers) /*-{
-		this.postMessage(jso, buffers);
-	}-*/;
-
-
-	public final native void start() /*-{
-		this.start();
-	}-*/;
-
-	public final native void close() /*-{
-		this.close();
-	}-*/;
-
-	public final native void addMessageHandler(MessageHandler handler) /*-{
-		this.addEventListener("message", $entry(function(event) {
-			handler.@com.colinalworth.gwt.worker.client.worker.MessageEvent.MessageHandler::onMessage(*)(event);
-		}));
-	}-*/;
-
+	public native void addEventListener(String type, MessageHandler listener);
 
 }

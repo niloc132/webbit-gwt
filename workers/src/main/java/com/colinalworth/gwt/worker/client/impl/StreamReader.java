@@ -34,7 +34,7 @@ public class StreamReader extends AbstractSerializationStreamReader {
 
 		//TODO if StreamWriter might not compress, check that we've got something that can be compressed...
 		//unzip data before continuing
-		Inflate unzip = Inflate.create();
+		Inflate unzip = new Inflate();
 		unzip.push(data, true);
 		data = unzip.getResult().buffer();
 

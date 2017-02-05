@@ -14,7 +14,7 @@ public abstract class AbstractWorkerFactoryImpl<R extends Endpoint<R, L>, L exte
 	@Override
 	public R createDedicatedWorker(String pathToJs, L local) {
 
-		Worker worker = Worker.child(pathToJs);
+		Worker worker = new Worker(pathToJs);
 
 		R remote = create(worker);
 
@@ -26,7 +26,7 @@ public abstract class AbstractWorkerFactoryImpl<R extends Endpoint<R, L>, L exte
 
 	@Override
 	public R createSharedWorker(String pathToJs, L local) {
-		SharedWorker worker = SharedWorker.create(pathToJs);
+		SharedWorker worker = new SharedWorker(pathToJs);
 		R remote = create(worker.getPort());
 
 		remote.setRemote(local);
