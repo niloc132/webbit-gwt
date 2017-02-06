@@ -7,7 +7,7 @@ import com.colinalworth.gwt.websockets.shared.impl.ClientCallbackInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.ClientInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.ServerCallbackInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.ServerInvocation;
-import com.colinalworth.gwt.websockets.shared.impl.WebbitService;
+import com.colinalworth.gwt.websockets.shared.impl.DummyRemoteService;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.server.rpc.RPC;
@@ -36,8 +36,8 @@ public class RpcEndpoint<S extends Server<S, C>, C extends Client<C, S>> {
 	static {
 		Method m1 = null, m2 = null;
 		try {
-			m1 = WebbitService.class.getDeclaredMethod("invoke", ServerInvocation.class);
-			m2 = WebbitService.class.getDeclaredMethod("callback", ServerCallbackInvocation.class);
+			m1 = DummyRemoteService.class.getDeclaredMethod("invoke", ServerInvocation.class);
+			m2 = DummyRemoteService.class.getDeclaredMethod("callback", ServerCallbackInvocation.class);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

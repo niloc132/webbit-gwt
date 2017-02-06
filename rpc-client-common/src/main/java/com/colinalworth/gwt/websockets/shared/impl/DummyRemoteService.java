@@ -16,14 +16,13 @@
  */
 package com.colinalworth.gwt.websockets.shared.impl;
 
-import com.google.gwt.http.client.RequestBuilder;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.rpc.RemoteService;
 
 /**
- * Dummy async interface used to convince RPC internals that a real RPC call is being made.
+ * Dummy service interface used to convince RPC internals that a real RPC call is being made.
  *
  */
-public interface WebbitServiceAsync {
-	RequestBuilder invoke(ServerInvocation serverInvocation, AsyncCallback<ClientInvocation> callback);
-	RequestBuilder callback(ServerCallbackInvocation serverCallbackInvocation, AsyncCallback<ClientCallbackInvocation> callback);
+public interface DummyRemoteService extends RemoteService {
+	ClientInvocation invoke(ServerInvocation serverInvocation);
+	ClientCallbackInvocation callback(ServerCallbackInvocation serverCallbackInvocation);
 }

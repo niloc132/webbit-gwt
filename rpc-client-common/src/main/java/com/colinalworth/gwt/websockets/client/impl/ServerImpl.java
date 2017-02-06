@@ -160,7 +160,7 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		AbstractSerializationStreamWriter writer = new ClientSerializationStreamWriter(__getSerializer(), "", "101010");
 		// manually prepare to serialize a method call to keep the server side simpler
 		writer.prepareToWrite();
-		writer.writeString("com.colinalworth.gwt.websockets.shared.impl.WebbitService");//interface
+		writer.writeString("com.colinalworth.gwt.websockets.shared.impl.DummyRemoteService");//interface
 		writer.writeString("callback");//method name
 		writer.writeInt(1);//param count
 
@@ -205,7 +205,7 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 		AbstractSerializationStreamWriter writer = new ClientSerializationStreamWriter(__getSerializer(), "", "101010");
 		// manually prepare to serialize a method call to keep the server side simpler
 		writer.prepareToWrite();
-		writer.writeString("com.colinalworth.gwt.websockets.shared.impl.WebbitService");//interface
+		writer.writeString("com.colinalworth.gwt.websockets.shared.impl.DummyRemoteService");//interface
 		writer.writeString("invoke");//method name
 		writer.writeInt(1);//param count
 
