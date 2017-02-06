@@ -59,9 +59,7 @@ public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, R
 		__checkLocal();
 		//message is two parts, payload and strings
 		JsArrayMixed data = message.getData();
-		//noinspection RedundantCast: gwt 2.7 bug, resolved in 2.8
-		ArrayBuffer payload = (ArrayBuffer) data.getObject(0);
-		ByteBuffer byteBuffer = TypedArrayHelper.wrap(payload);
+		ByteBuffer byteBuffer = TypedArrayHelper.wrap(data.getObject(0));
 		byteBuffer.order(ByteOrder.nativeOrder());
 		JsArrayString strings = data.getObject(1);
 		StreamReader reader = new StreamReader(__getSerializer(), byteBuffer, strings);
