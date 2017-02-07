@@ -1,4 +1,4 @@
-package samples.ui.client;
+package simpleworker.ui.client;
 
 import com.colinalworth.gwt.worker.client.WorkerFactory;
 import com.google.gwt.core.client.Callback;
@@ -9,8 +9,8 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.RootPanel;
-import samples.shared.client.MyHost;
-import samples.shared.client.MyWorker;
+import simpleworker.shared.client.MyHost;
+import simpleworker.shared.client.MyWorker;
 
 public class AppUI implements EntryPoint {
 	public interface Factory extends WorkerFactory<MyWorker, MyHost> {}

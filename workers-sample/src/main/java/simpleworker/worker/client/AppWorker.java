@@ -1,12 +1,12 @@
-package samples.worker.client;
+package simpleworker.worker.client;
 
 import com.colinalworth.gwt.worker.client.WorkerFactory;
 import com.colinalworth.gwt.worker.client.worker.MessagePort;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import samples.shared.client.MyHost;
-import samples.shared.client.MyWorker;
+import simpleworker.shared.client.MyHost;
+import simpleworker.shared.client.MyWorker;
 
 /**
  * Created by colin on 1/21/16.

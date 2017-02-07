@@ -2,7 +2,7 @@
 	<inherits name="com.google.gwt.user.User" />
 	<inherits name="com.colinalworth.gwt.worker.RpcToWorkers" />
 
-	<inherits name="samples.shared.Shared" />
+	<inherits name="simpleworker.shared.Shared" />
 
-	<entry-point class="samples.ui.client.AppUI" />
+	<entry-point class="simpleworker.ui.client.AppUI" />
 </module>
