@@ -120,9 +120,7 @@ public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, R
 			writer.writeObject(callbackInvoke);
 
 			JsArrayMixed workerData = writer.getWorkerData();
-			//noinspection RedundantCast: gwt 2.7 bug, resolved in 2.8
-			ArrayBuffer buffer = (ArrayBuffer) workerData.getObject(0);
-			worker.postMessage(workerData, new ArrayBuffer[]{buffer});
+			worker.postMessage(workerData, new ArrayBuffer[]{workerData.getObject(0)});
 		} catch (SerializationException e) {
 			//TODO report, rethrow
 		}
@@ -155,9 +153,7 @@ public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, R
 			writer.writeObject(invoke);
 
 			JsArrayMixed workerData = writer.getWorkerData();
-			//noinspection RedundantCast: gwt 2.7 bug, resolved in 2.8
-			ArrayBuffer buffer = (ArrayBuffer) workerData.getObject(0);
-			worker.postMessage(workerData, new ArrayBuffer[]{buffer});
+			worker.postMessage(workerData, new ArrayBuffer[]{workerData.getObject(0)});
 		} catch (SerializationException e) {
 			//TODO report, rethrow
 		}
