@@ -73,11 +73,13 @@ public class ServerBuilderGenerator extends Generator {
 
 
 		RemoteServiceRelativePath path = serverImplType.getAnnotation(RemoteServiceRelativePath.class);
+		sw.println("public %1$s() {", simpleName);
 		if (path != null) {
-			sw.println("public %1$s() {", simpleName);
 			sw.indentln("super(%1$s.getModuleBaseURL(), \"%2$s\");", GWT.class.getName(), path.value());
-			sw.println("}");
+		} else {
+			sw.indentln("super(%1$s.getModuleBaseURL(), null);", GWT.class.getName());
 		}
+		sw.println("}");
 
 
 		sw.println();

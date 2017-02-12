@@ -40,6 +40,7 @@ public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, R
 				}
 			}
 		});
+		worker.start();
 	}
 
 	@Override

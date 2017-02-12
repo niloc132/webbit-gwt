@@ -10,6 +10,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>workers-sample</artifactId>
+	<packaging>war</packaging>
 
 	<dependencies>
 		<dependency>
@@ -18,6 +19,13 @@
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>com.colinalworth.gwt.websockets</groupId>
+			<artifactId>javaee-websocket-gwt-rpc</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
 		<!-- Depend on gwt-user for compilation only -->
 		<dependency>
 			<groupId>${gwt.groupId}</groupId>
@@ -40,5 +48,14 @@
 				</executions>
 			</plugin>
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.eclipse.jetty</groupId>
+					<artifactId>jetty-maven-plugin</artifactId>
+					<version>9.2.3.v20140905</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 </project>

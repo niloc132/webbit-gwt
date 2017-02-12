@@ -3,6 +3,7 @@ package com.colinalworth.gwt.worker.client.impl;
 import com.colinalworth.gwt.worker.client.Endpoint;
 import com.colinalworth.gwt.worker.client.WorkerFactory;
 import com.colinalworth.gwt.worker.client.worker.MessagePort;
+import com.colinalworth.gwt.worker.client.worker.ServiceWorkerRegistration;
 import com.colinalworth.gwt.worker.client.worker.SharedWorker;
 import com.colinalworth.gwt.worker.client.worker.Worker;
 
@@ -26,7 +27,7 @@ public abstract class AbstractWorkerFactoryImpl<R extends Endpoint<R, L>, L exte
 
 	@Override
 	public R createSharedWorker(String pathToJs, L local) {
-		SharedWorker worker = new SharedWorker(pathToJs);
+		SharedWorker worker = new SharedWorker(pathToJs, pathToJs);
 		R remote = create(worker.getPort());
 
 		remote.setRemote(local);

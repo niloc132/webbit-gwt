@@ -9,7 +9,7 @@ import jsinterop.annotations.JsType;
  * Created by colin on 1/18/16.
  */
 @JsType(isNative = true, namespace = JsPackage.GLOBAL)
-public final class Worker extends MessagePort {
+public class Worker extends MessagePort {
 
 	public Worker(String path) {
 

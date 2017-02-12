@@ -26,7 +26,7 @@ public class SampleEntryPoint implements EntryPoint {
 		//use the @RemoteServiceRelativePath given on the interface
 //		builder.setUrl("ws://" + Window.Location.getHost() + "/chat");
 //		builder.setHostname(Window.Location.getHostName());
-//		builder.setPath("chat");
+		builder.setPath("chat");
 
 		// Because this is just a demo, we're using Window.prompt to get a username
 		final String username = Window.prompt("Select a username", "");

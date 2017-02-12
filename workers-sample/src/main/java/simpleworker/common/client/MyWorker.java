@@ -1,4 +1,4 @@
-package simpleworker.shared.client;
+package simpleworker.common.client;
 
 import com.colinalworth.gwt.worker.client.Endpoint;
 import com.google.gwt.core.client.Callback;

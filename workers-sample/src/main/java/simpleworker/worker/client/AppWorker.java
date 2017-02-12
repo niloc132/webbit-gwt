@@ -5,8 +5,8 @@ import com.colinalworth.gwt.worker.client.worker.MessagePort;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import simpleworker.shared.client.MyHost;
-import simpleworker.shared.client.MyWorker;
+import simpleworker.common.client.MyHost;
+import simpleworker.common.client.MyWorker;
 
 /**
  * Created by colin on 1/21/16.

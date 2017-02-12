@@ -9,8 +9,8 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.RootPanel;
-import simpleworker.shared.client.MyHost;
-import simpleworker.shared.client.MyWorker;
+import simpleworker.common.client.MyHost;
+import simpleworker.common.client.MyWorker;
 
 public class AppUI implements EntryPoint {
 	public interface Factory extends WorkerFactory<MyWorker, MyHost> {}
@@ -19,7 +19,7 @@ public class AppUI implements EntryPoint {
 	public void onModuleLoad() {
 		Factory factory = GWT.create(Factory.class);//new GeneratedWorkerFactory();
 
-		final MyWorker worker = factory.createDedicatedWorker(GWT.getModuleBaseForStaticFiles() + "../worker/worker.js", new MyHost() {
+		final MyWorker worker = factory.createDedicatedWorker(GWT.getModuleBaseForStaticFiles() + "../simpleworker_worker/worker.js", new MyHost() {
 			private MyWorker remote;
 
 			@Override

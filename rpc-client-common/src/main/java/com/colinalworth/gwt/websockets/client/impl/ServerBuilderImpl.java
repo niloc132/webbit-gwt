@@ -2,6 +2,7 @@ package com.colinalworth.gwt.websockets.client.impl;
 
 import com.colinalworth.gwt.websockets.client.ServerBuilder;
 import com.colinalworth.gwt.websockets.shared.Server;
+import com.google.gwt.http.client.URL;
 import com.google.gwt.http.client.UrlBuilder;
 import com.google.gwt.user.client.Window;
 
@@ -16,14 +17,18 @@ public abstract class ServerBuilderImpl<S extends Server<S, ?>> implements Serve
 	public ServerBuilderImpl(String moduleBaseURL, String remoteServiceRelativePath) {
 		urlBuilder.setProtocol(Window.Location.getProtocol().startsWith("https") ? "wss": "ws").setHash(null);
 
-		if (remoteServiceRelativePath != null) {
+		//TODO in a worker moduleBaseURL can be null...
+		if (remoteServiceRelativePath != null && moduleBaseURL != null) {
+
+			//assume full url, pull out the path
+			String basePath = moduleBaseURL.substring(moduleBaseURL.indexOf("/", moduleBaseURL.indexOf("://") + 3));
 			/*
 			 * If the module relative URL is not null we set the remote service URL to
 			 * be the module base URL plus the module relative remote service URL.
 			 * Otherwise an explicit call to
 			 * ServerBuilder.setPath(String) or setUrl(String) is required.
 			 */
-			setPath(moduleBaseURL + remoteServiceRelativePath);
+			setPath(basePath + remoteServiceRelativePath);
 		}
 
 	}

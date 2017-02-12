@@ -1,8 +1,8 @@
-<module rename-to="ui">
+<module rename-to="simpleworker_ui">
 	<inherits name="com.google.gwt.user.User" />
 	<inherits name="com.colinalworth.gwt.worker.RpcToWorkers" />
 
-	<inherits name="simpleworker.shared.Shared" />
+	<inherits name="simpleworker.common.Common" />
 
 	<entry-point class="simpleworker.ui.client.AppUI" />
 </module>
