@@ -3,7 +3,6 @@ package com.colinalworth.gwt.worker.client.impl;
 import com.colinalworth.gwt.worker.client.Endpoint;
 import com.colinalworth.gwt.worker.client.WorkerFactory;
 import com.colinalworth.gwt.worker.client.worker.MessagePort;
-import com.colinalworth.gwt.worker.client.worker.ServiceWorkerRegistration;
 import com.colinalworth.gwt.worker.client.worker.SharedWorker;
 import com.colinalworth.gwt.worker.client.worker.Worker;
 

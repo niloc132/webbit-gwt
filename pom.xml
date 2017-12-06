@@ -14,8 +14,8 @@
 	<properties>
 		<gwt.groupId>com.google.gwt</gwt.groupId>
 		<gwt.plugin.groupId>org.codehaus.mojo</gwt.plugin.groupId>
-		<gwt.version>2.8.0</gwt.version>
-		<gwt.plugin.version>2.8.0</gwt.plugin.version>
+		<gwt.version>2.8.2</gwt.version>
+		<gwt.plugin.version>2.8.2</gwt.plugin.version>
 	</properties>
 
 	<dependencyManagement>
