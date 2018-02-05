@@ -1,4 +1,5 @@
 /************************************************************************
+ * %%Ignore-License
  * This is a part of gwtwwlinker project
  * https://github.com/tomekziel/gwtwwlinker 
  *
