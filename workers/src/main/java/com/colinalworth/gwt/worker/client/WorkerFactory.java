@@ -22,15 +22,15 @@ package com.colinalworth.gwt.worker.client;
 import com.colinalworth.gwt.worker.client.worker.MessagePort;
 
 /**
- * @todo how to differentiate between shared, dedicated, service workers...
+ * todo how to differentiate between shared, dedicated, service workers...
  */
 public interface WorkerFactory<R extends Endpoint<R, L>, L extends Endpoint<L, R>> {
 
 	/**
 	 * Creates a worker with the remote JS connected to the local endpoint.
-	 * @param pathToJs
-	 * @param local
-	 * @return
+	 * @param pathToJs the path to the JS file which will describe this worker
+	 * @param local the local interface which the new remote worker can send messages to
+	 * @return the newly created worker, which will still be starting up.
 	 */
 	R createDedicatedWorker(String pathToJs, L local);
 
