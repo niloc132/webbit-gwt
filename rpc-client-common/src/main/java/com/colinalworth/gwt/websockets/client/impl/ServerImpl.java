@@ -95,7 +95,17 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 					//TODO
 				}
 			} catch (Exception ex) {
-				onError(ex);
+				if (getClient() != null) {
+					// If getClient() returns null, the error is very likely "you need to assign a client to handle
+					// messages", but oh well.
+					getClient().onError(ex);
+				} else if (errorHandler != null) {
+					// might as well reuse this, since we apparently haven't finished connection enough to have a client
+					errorHandler.onError(ex);
+				} else {
+					// fall back to GWT.log
+					GWT.log("An error occurred while handling a message from the server, and no client or connection handler was found", ex);
+				}
 			}
 		};
 		connection.onerror = e -> {
