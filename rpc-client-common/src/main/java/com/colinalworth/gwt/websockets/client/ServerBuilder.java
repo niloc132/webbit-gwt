@@ -78,11 +78,16 @@ public interface ServerBuilder<S extends Server<S, ?>> {
 	S start();
 
 	/**
-	 * Specifies a handler to receive errors when a problem occurs with the connection.
+	 * Specifies a handler to receive errors when a problem occurs around the protocol: the connection,
+	 * serialization, or other unhandled issues.
 	 * @param errorHandler the handler to send connection errors to
 	 */
 	void setConnectionErrorHandler(ConnectionErrorHandler errorHandler);
 
+	/**
+	 * Allows de/serialization and connection problems to be handled rather than rethrowing
+	 * or just pushing to GWT.log.
+	 */
 	public interface ConnectionErrorHandler {
 		void onError(Exception ex);
 	}

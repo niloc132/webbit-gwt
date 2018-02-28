@@ -43,8 +43,10 @@ public interface Client<C extends Client<C,S>, S extends Server<S,C>> {
 	void onClose();
 
 	/**
-	 * Called when an error occurs while trying to send a message to the server.
-	 * @param error the error that occurred.
+	 * Called when an error occurs while handling a message in one of the other client methods. If a
+	 * ConnectionErrorHandler is provided to the server builder, that will be used in handling
+	 * serialization/deserialization and connection errors.
+	 * @param error the error that occurred
 	 */
 	void onError(Throwable error);
 }

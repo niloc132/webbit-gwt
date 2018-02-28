@@ -29,7 +29,6 @@ import com.colinalworth.gwt.websockets.shared.impl.ServerInvocation;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptException;
-import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamWriter;
 import com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader;
@@ -95,16 +94,13 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 					//TODO
 				}
 			} catch (Exception ex) {
-				if (getClient() != null) {
-					// If getClient() returns null, the error is very likely "you need to assign a client to handle
-					// messages", but oh well.
-					getClient().onError(ex);
-				} else if (errorHandler != null) {
-					// might as well reuse this, since we apparently haven't finished connection enough to have a client
+				// the onMessage method handled errors within client methods, here we handle some kind of
+				// deserialization error, or the lack of a client to forward to
+				if (errorHandler != null) {
 					errorHandler.onError(ex);
 				} else {
 					// fall back to GWT.log
-					GWT.log("An error occurred while handling a message from the server, and no client or connection handler was found", ex);
+					GWT.log("An error occurred while handling a message from the server, and no client or connection handler was found - pass a error handler to your server builder to handle this yourself", ex);
 				}
 			}
 		};
@@ -179,7 +175,12 @@ public abstract class ServerImpl<S extends Server<S,C>, C extends Client<C,S>> i
 			}
 		} catch (Exception ex) {
 			//pass any error when invoking a client method back to the error handler
-			getClient().onError(ex);
+			if (getClient() != null) {
+				getClient().onError(ex);
+			} else {
+				// no client to pass error to, rethrow and let the connection error handler manage it
+				throw ex;
+			}
 		}
 	}
 
