@@ -278,7 +278,7 @@ public class RpcEndpoint<S extends Server<S, C>, C extends Client<C, S>> {
 
 			final int callbackId;
 			final Object[] actualArgs;
-			if (method.getParameterTypes()[method.getParameterTypes().length - 1] == Callback.class) {
+			if (method.getParameterTypes().length > 0 && method.getParameterTypes()[method.getParameterTypes().length - 1] == Callback.class) {
 				callbackId = nextCallbackId.getAndIncrement();
 				callbacks.put(callbackId, (Callback<?, ?>) args[args.length - 1]);
 				actualArgs = new Object[args.length - 1];
