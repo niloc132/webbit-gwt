@@ -8,7 +8,7 @@
 	</parent>
 	<groupId>com.colinalworth.gwt.websockets</groupId>
 	<artifactId>gwt-websockets-parent</artifactId>
-	<version>0.1.1-SNAPSHOT</version>
+	<version>0.1.1</version>
 	<packaging>pom</packaging>
 	<name>GWT Websockets parent project</name>
 	<description></description>
