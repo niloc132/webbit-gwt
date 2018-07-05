@@ -43,8 +43,27 @@
 		</dependency>
 		<dependency>
 			<groupId>com.vertispan.serial</groupId>
+			<artifactId>api</artifactId>
+			<version>1.0-SNAPSHOT</version>
+			<classifier>sources</classifier>
+		</dependency>
+		<dependency>
+			<groupId>com.vertispan.serial</groupId>
 			<artifactId>string-serializer-streams</artifactId>
 			<version>1.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/java</directory>
+				<includes>
+					<include>**/client/**/*.java</include>
+					<include>**/shared/**/*.java</include>
+					<include>**/*.gwt.xml</include>
+				</includes>
+			</resource>
+		</resources>
+	</build>
 </project>
