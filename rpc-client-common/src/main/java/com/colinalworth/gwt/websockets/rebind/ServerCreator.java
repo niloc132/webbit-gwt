@@ -19,14 +19,14 @@
  */
 package com.colinalworth.gwt.websockets.rebind;
 
-import com.colinalworth.gwt.websockets.client.impl.ServerImpl;
+import client.impl.ServerImpl;
 import com.colinalworth.gwt.websockets.shared.Client;
 import com.colinalworth.gwt.websockets.shared.Server;
 import com.colinalworth.gwt.websockets.shared.impl.ClientCallbackInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.ClientInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.ServerCallbackInvocation;
 import com.colinalworth.gwt.websockets.shared.impl.ServerInvocation;
-import com.colinalworth.gwt.websockets.client.ServerBuilder;
+import client.ServerBuilder;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.ext.GeneratorContext;

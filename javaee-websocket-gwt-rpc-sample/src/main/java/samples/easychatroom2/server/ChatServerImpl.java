@@ -20,7 +20,7 @@
 package samples.easychatroom2.server;
 
 import com.colinalworth.gwt.websockets.server.AbstractServerImpl;
-import com.google.gwt.core.client.Callback;
+import com.colinalworth.gwt.websockets.shared.Callback;
 import samples.easychatroom2.shared.ChatClient;
 import samples.easychatroom2.shared.ChatServer;
 

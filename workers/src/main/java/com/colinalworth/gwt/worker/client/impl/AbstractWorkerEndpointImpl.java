@@ -26,9 +26,16 @@ import com.colinalworth.gwt.worker.client.worker.MessagePort;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.JsArrayMixed;
 import com.google.gwt.core.client.JsArrayString;
-import com.google.gwt.typedarrays.shared.ArrayBuffer;
 import com.google.gwt.user.client.rpc.SerializationException;
-import com.google.gwt.user.client.rpc.impl.Serializer;
+import com.vertispan.serial.TypeSerializer;
+import com.vertispan.serial.streams.bytebuffer.ByteBufferSerializationStreamReader;
+import com.vertispan.serial.streams.bytebuffer.ByteBufferSerializationStreamWriter;
+import elemental2.core.ArrayBuffer;
+import elemental2.core.JsArray;
+import elemental2.core.JsString;
+import jsinterop.base.Any;
+import jsinterop.base.Js;
+import playn.html.HasArrayBufferView;
 import playn.html.TypedArrayHelper;
 
 import java.nio.ByteBuffer;
@@ -72,17 +79,17 @@ public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, R
 		return remote;
 	}
 
-	protected abstract Serializer __getSerializer();
+	protected abstract TypeSerializer __getSerializer();
 
 
 	public void __onMessage(MessageEvent message) throws SerializationException {
 		__checkLocal();
 		//message is two parts, payload and strings
-		JsArrayMixed data = message.getData();
-		ByteBuffer byteBuffer = TypedArrayHelper.wrap(data.getObject(0));
+		JsArray<Any> data = message.getData();
+		ByteBuffer byteBuffer = TypedArrayHelper.wrap(data.getAt(0).cast());
 		byteBuffer.order(ByteOrder.nativeOrder());
-		JsArrayString strings = data.getObject(1);
-		StreamReader reader = new StreamReader(__getSerializer(), byteBuffer, strings);
+		String[] strings = data.getAt(1).cast();
+		ByteBufferSerializationStreamReader reader = new ByteBufferSerializationStreamReader(__getSerializer(), byteBuffer, strings);
 
 		Object object = reader.readObject();
 
@@ -134,13 +141,15 @@ public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, R
 	private void __sendCallback(int callbackId, Object response, boolean isSuccess) {
 		RemoteCallbackInvocation callbackInvoke = new RemoteCallbackInvocation(callbackId, response, isSuccess);
 
-		StreamWriter writer = new StreamWriter(__getSerializer());
+		ByteBufferSerializationStreamWriter writer = new ByteBufferSerializationStreamWriter(__getSerializer());
 
 		try {
 			writer.writeObject(callbackInvoke);
 
-			JsArrayMixed workerData = writer.getWorkerData();
-			worker.postMessage(workerData, new ArrayBuffer[]{workerData.getObject(0)});
+			JsString[] stringTable = Js.<JsArray<JsString>>uncheckedCast(writer.getFinishedStringTable()).slice();
+			ArrayBuffer payload = Js.cast(((HasArrayBufferView) writer.getPayloadBytes()).getTypedArray().buffer());
+
+			worker.postMessage(new JsArray<>(payload, stringTable), new JsArray<>(payload));
 		} catch (SerializationException e) {
 			//TODO report, rethrow
 		}
@@ -167,13 +176,15 @@ public abstract class AbstractWorkerEndpointImpl<LOCAL extends Endpoint<LOCAL, R
 		}
 		RemoteInvocation invoke = new RemoteInvocation(methodName, params, callbackId);
 
-		StreamWriter writer = new StreamWriter(__getSerializer());
+		ByteBufferSerializationStreamWriter writer = new ByteBufferSerializationStreamWriter(__getSerializer());
 
 		try {
 			writer.writeObject(invoke);
 
-			JsArrayMixed workerData = writer.getWorkerData();
-			worker.postMessage(workerData, new ArrayBuffer[]{workerData.getObject(0)});
+			JsString[] stringTable = Js.<JsArray<JsString>>uncheckedCast(writer.getFinishedStringTable()).slice();
+			ArrayBuffer payload = Js.cast(((HasArrayBufferView) writer.getPayloadBytes()).getTypedArray().buffer());
+
+			worker.postMessage(new JsArray<>(payload, stringTable), new JsArray<>(payload));
 		} catch (SerializationException e) {
 			//TODO report, rethrow
 		}

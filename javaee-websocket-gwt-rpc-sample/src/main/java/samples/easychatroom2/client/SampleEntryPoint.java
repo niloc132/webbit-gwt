@@ -23,14 +23,18 @@ import com.colinalworth.gwt.websockets.client.ConnectionClosedEvent;
 import com.colinalworth.gwt.websockets.client.ConnectionOpenedEvent;
 import com.colinalworth.gwt.websockets.client.ConnectionOpenedEvent.ConnectionOpenedHandler;
 import com.colinalworth.gwt.websockets.client.ServerBuilder;
-import com.google.gwt.core.client.Callback;
+import com.colinalworth.gwt.websockets.shared.Callback;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
+import com.vertispan.serial.streams.string.StringSerializationStreamReader;
+import com.vertispan.serial.streams.string.StringSerializationStreamWriter;
+import elemental2.dom.WebSocket;
 import samples.easychatroom2.shared.ChatServer;
+import samples.easychatroom2.shared.ChatServer_Impl;
 
 public class SampleEntryPoint implements EntryPoint {
 	interface ChatServerBuilder extends ServerBuilder<ChatServer> {}
@@ -55,6 +59,20 @@ public class SampleEntryPoint implements EntryPoint {
 
 		final ChatClientWidget impl = new ChatClientWidget();
 		server.setClient(impl);
+
+
+		//sample of how the websocket impl could be wired up, entirely generically
+		WebSocket websocket = new WebSocket("ws://localhost");
+		new ChatServer_Impl(
+				ts -> new StringSerializationStreamWriter(ts, "", ""),
+				writer -> websocket.send(writer.toString()),
+				(thingie, typeSerializer) -> {
+					websocket.onmessage = message -> {
+						thingie.accept(new StringSerializationStreamReader(typeSerializer, message.data.toString()));
+						return null;
+					};
+				}
+		);
 
 		// This listens for the connection to start, so we can log in with the username
 		// we already picked.

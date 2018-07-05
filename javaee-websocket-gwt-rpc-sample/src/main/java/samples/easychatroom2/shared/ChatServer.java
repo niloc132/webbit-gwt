@@ -19,8 +19,9 @@
  */
 package samples.easychatroom2.shared;
 
+import com.colinalworth.gwt.websockets.shared.Callback;
+import com.colinalworth.gwt.websockets.shared.Endpoint;
 import com.colinalworth.gwt.websockets.shared.Server;
-import com.google.gwt.core.client.Callback;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
 /**
@@ -28,6 +29,7 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  *
  */
 @RemoteServiceRelativePath("/chat")
+@Endpoint
 public interface ChatServer extends Server<ChatServer, ChatClient> {
 	/**
 	 * Brings the user into the chat room, with the given username

@@ -20,6 +20,7 @@
 <module>
 	<inherits name="com.colinalworth.gwt.websockets.RpcOverWebSockets" />
 	<inherits name="playn.Core"/>
+	<inherits name="elemental2.core.Core"/>
 
 	<generate-with class="com.colinalworth.gwt.worker.rebind.EndpointFactoryGenerator">
 		<when-type-assignable class="com.colinalworth.gwt.worker.client.WorkerFactory" />

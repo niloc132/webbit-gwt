@@ -27,6 +27,6 @@
 	<source path="shared"/>
 
 	<generate-with class="com.colinalworth.gwt.websockets.rebind.ServerBuilderGenerator">
-		<when-type-assignable class="com.colinalworth.gwt.websockets.client.ServerBuilder" />
+		<when-type-assignable class="client.ServerBuilder" />
 	</generate-with>
 </module>

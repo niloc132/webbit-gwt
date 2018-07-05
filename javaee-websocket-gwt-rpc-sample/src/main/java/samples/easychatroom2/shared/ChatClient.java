@@ -19,13 +19,15 @@
  */
 package samples.easychatroom2.shared;
 
+import com.colinalworth.gwt.websockets.shared.Callback;
 import com.colinalworth.gwt.websockets.shared.Client;
-import com.google.gwt.core.client.Callback;
+import com.colinalworth.gwt.websockets.shared.Endpoint;
 
 /**
  * Simple example of methods implemented by a GWT client that can be called from the server
  *
  */
+@Endpoint
 public interface ChatClient extends Client<ChatClient, ChatServer> {
 	/**
 	 * Tells the client that a user posted a message to the chat room

@@ -19,8 +19,8 @@
  */
 package com.colinalworth.gwt.websockets.rebind;
 
-import com.colinalworth.gwt.websockets.client.ServerBuilder;
-import com.colinalworth.gwt.websockets.client.impl.ServerBuilderImpl;
+import client.ServerBuilder;
+import client.impl.ServerBuilderImpl;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.ext.Generator;
 import com.google.gwt.core.ext.GeneratorContext;

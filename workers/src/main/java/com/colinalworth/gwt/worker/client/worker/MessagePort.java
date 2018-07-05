@@ -21,6 +21,8 @@ package com.colinalworth.gwt.worker.client.worker;
 
 import com.colinalworth.gwt.worker.client.worker.MessageEvent.MessageHandler;
 import com.google.gwt.typedarrays.shared.ArrayBuffer;
+import elemental2.core.JsArray;
+import elemental2.core.Transferable;
 import jsinterop.annotations.JsOverlay;
 import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsType;
@@ -31,7 +33,7 @@ import jsinterop.annotations.JsType;
 @JsType(isNative = true, namespace = JsPackage.GLOBAL)
 public class MessagePort {
 
-	public final native void postMessage(Object jso, ArrayBuffer[] buffers);
+	public final native void postMessage(Object jso, JsArray<? extends Transferable> buffers);
 
 	public native void start();
 

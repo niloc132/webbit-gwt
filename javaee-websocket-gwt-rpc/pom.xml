@@ -13,7 +13,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.colinalworth.gwt.websockets</groupId>
-			<artifactId>rpc-client-common</artifactId>
+			<artifactId>gwt-websockets-api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
