@@ -25,28 +25,24 @@ import com.colinalworth.gwt.websockets.client.ConnectionOpenedEvent.ConnectionOp
 import com.colinalworth.gwt.websockets.client.ServerBuilder;
 import com.colinalworth.gwt.websockets.shared.Callback;
 import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
-import com.vertispan.serial.streams.string.StringSerializationStreamReader;
-import com.vertispan.serial.streams.string.StringSerializationStreamWriter;
-import elemental2.dom.WebSocket;
 import samples.easychatroom2.shared.ChatServer;
 import samples.easychatroom2.shared.ChatServer_Impl;
 
 public class SampleEntryPoint implements EntryPoint {
-	interface ChatServerBuilder extends ServerBuilder<ChatServer> {}
 
 	@Override
 	public void onModuleLoad() {
-		// We can't GWT.create the server itself, instead, we need a builder
-		//final ChatServer server = GWT.create(ChatServer.class);
-		final ChatServerBuilder builder = GWT.create(ChatServerBuilder.class);
+		// We could create the 'server' itself, but then we have to wire up the websocket
+		// stuff, instead, we use a builder, which lets us set the URL once and create
+		// new instances on demand
+		ServerBuilder<ChatServer_Impl> builder = ServerBuilder.of(ChatServer_Impl::new);
 
-		// Set the url directly, or use the setHost, setPort, etc calls and
-		//use the @RemoteServiceRelativePath given on the interface
+		// Set the url directly, or use the setHost, setPort, etc calls, based on the
+		// page's own url
 //		builder.setUrl("ws://" + Window.Location.getHost() + "/chat");
 //		builder.setHostname(Window.Location.getHostName());
 		builder.setPath("chat");
@@ -59,20 +55,6 @@ public class SampleEntryPoint implements EntryPoint {
 
 		final ChatClientWidget impl = new ChatClientWidget();
 		server.setClient(impl);
-
-
-		//sample of how the websocket impl could be wired up, entirely generically
-		WebSocket websocket = new WebSocket("ws://localhost");
-		new ChatServer_Impl(
-				ts -> new StringSerializationStreamWriter(ts, "", ""),
-				writer -> websocket.send(writer.toString()),
-				(thingie, typeSerializer) -> {
-					websocket.onmessage = message -> {
-						thingie.accept(new StringSerializationStreamReader(typeSerializer, message.data.toString()));
-						return null;
-					};
-				}
-		);
 
 		// This listens for the connection to start, so we can log in with the username
 		// we already picked.

@@ -19,13 +19,18 @@
  */
 package com.colinalworth.gwt.websockets.client;
 
+import com.colinalworth.gwt.websockets.client.impl.ServerBuilderImpl;
 import com.colinalworth.gwt.websockets.shared.Server;
+import com.colinalworth.gwt.websockets.shared.impl.AbstractEndpointImpl.EndpointImplConstructor;
+import com.vertispan.serial.streams.string.StringSerializationStreamReader;
+import com.vertispan.serial.streams.string.StringSerializationStreamWriter;
+import elemental2.dom.WebSocket;
 
 /**
  * Base interface to be extended and given a concrete Server interface in a client project,
  * causing code to be generated to connect to a websocket server.
  */
-public interface ServerBuilder<S extends Server<S, ?>> {
+public interface ServerBuilder<S extends Server<? super S, ?>> {
 	/**
 	 * Sets the full url, including protocol, host, port, and path for the next server connection
 	 * to be started. If called with a non-null value, will override the other setters in this
@@ -94,5 +99,28 @@ public interface ServerBuilder<S extends Server<S, ?>> {
 	 */
 	public interface ConnectionErrorHandler {
 		void onError(Object ex);
+	}
+
+	/**
+	 * Simple create method that takes the generated server endpoint's constructor and returns a functioning
+	 * server builder.
+	 */
+	static <E extends Server<? super E, ?>> ServerBuilder<E> of(EndpointImplConstructor<E> constructor) {
+		return new ServerBuilderImpl<E>("", "") {
+			@Override
+			public E start() {
+				WebSocket socket = new WebSocket(getUrl());
+				return constructor.create(
+						serializer -> new StringSerializationStreamWriter(serializer, "", ""),
+						stream -> socket.send(stream.toString()),
+						(send, serializer) -> {
+							socket.onmessage = message -> {
+								send.accept(new StringSerializationStreamReader(serializer, message.data.toString()));
+								return null;
+							};
+						}
+				);
+			}
+		};
 	}
 }

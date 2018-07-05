@@ -15,7 +15,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.colinalworth.gwt.websockets</groupId>
-			<artifactId>javaee-websocket-gwt-rpc</artifactId>
+			<artifactId>gwt-websockets-jsr356</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

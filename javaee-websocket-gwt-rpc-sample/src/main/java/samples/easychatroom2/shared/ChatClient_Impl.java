@@ -34,10 +34,21 @@ import java.util.function.Function;
 public class ChatClient_Impl extends AbstractEndpointImpl implements ChatClient {
 	private final ClientSerializers s;
 
-	public ChatClient_Impl(Function<TypeSerializer, SerializationStreamWriter> writerFactory, Consumer<SerializationStreamWriter> send, BiConsumer<Consumer<SerializationStreamReader>, TypeSerializer> onMessage) {
-		this(writerFactory, send, onMessage, new ClientSerializers_Impl());
+	private ChatServer server;
+
+	public <S extends SerializationStreamWriter> ChatClient_Impl(
+			Function<TypeSerializer, S> writerFactory,
+			Consumer<S> send,
+			BiConsumer<Consumer<SerializationStreamReader>, TypeSerializer> onMessage
+	) {
+		this(writerFactory, send, new ClientSerializers_Impl(), onMessage);
 	}
-	private ChatClient_Impl(Function<TypeSerializer, SerializationStreamWriter> writerFactory, Consumer<SerializationStreamWriter> send, BiConsumer<Consumer<SerializationStreamReader>, TypeSerializer> onMessage, ClientSerializers serializers) {
+	private <S extends SerializationStreamWriter> ChatClient_Impl(
+			Function<TypeSerializer, S> writerFactory,
+			Consumer<S> send,
+			ClientSerializers serializers,
+			BiConsumer<Consumer<SerializationStreamReader>, TypeSerializer> onMessage
+	) {
 		super(
 				writerFactory,
 				send,
@@ -131,6 +142,9 @@ public class ChatClient_Impl extends AbstractEndpointImpl implements ChatClient 
 		}
 	}
 
+
+
+	// probably group these up, put in a shared abstract class?
 	@Override
 	protected void __onError(Throwable ex) {
 		getServer().onError(ex);
@@ -138,29 +152,32 @@ public class ChatClient_Impl extends AbstractEndpointImpl implements ChatClient 
 
 	@Override
 	public void setServer(ChatServer server) {
-
+		this.server = server;
 	}
 
 	@Override
 	public ChatServer getServer() {
-		return null;
+		return server;
 	}
 
 	@Override
 	public void onOpen() {
-
+		throw new UnsupportedOperationException("This method is only intended to be called on the client itself");
 	}
 
 	@Override
 	public void onClose() {
-
+		throw new UnsupportedOperationException("This method is only intended to be called on the client itself");
 	}
 
 	@Override
 	public void onError(Throwable error) {
-
+		throw new UnsupportedOperationException("This method is only intended to be called on the client itself");
 	}
 
+
+
+	// generated interface which will create our serializers
 	@SerializationWiring
 	public interface ClientSerializers {
 		TypeSerializer createSerializer();

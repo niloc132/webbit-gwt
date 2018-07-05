@@ -133,11 +133,12 @@
 	<modules>
 		<module>gwt-websockets-api</module>
 		<module>gwt-websockets-client</module>
+		<module>gwt-websockets-jsr356</module>
 		<module>gwt-websockets-processor</module>
 
-		<module>rpc-client-common</module>
+		<!--<module>rpc-client-common</module>-->
 
-		<module>javaee-websocket-gwt-rpc</module>
+		<!--<module>javaee-websocket-gwt-rpc</module>-->
 		<module>javaee-websocket-gwt-rpc-sample</module>
 
 		<module>workers</module>

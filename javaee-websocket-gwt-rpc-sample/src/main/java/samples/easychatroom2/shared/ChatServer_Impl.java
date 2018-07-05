@@ -34,10 +34,21 @@ import java.util.function.Function;
 public class ChatServer_Impl extends AbstractEndpointImpl implements ChatServer {
 	private final ServerSerializers s;
 
-	public <S extends SerializationStreamWriter> ChatServer_Impl(Function<TypeSerializer, S> writerFactory, Consumer<S> send, BiConsumer<Consumer<SerializationStreamReader>, TypeSerializer> onMessage) {
+	private ChatClient client;
+
+	public <S extends SerializationStreamWriter> ChatServer_Impl(
+			Function<TypeSerializer, S> writerFactory,
+			Consumer<S> send,
+			BiConsumer<Consumer<SerializationStreamReader>, TypeSerializer> onMessage
+	) {
 		this(writerFactory, send, new ServerSerializers_Impl(), onMessage);
 	}
-	private <S extends SerializationStreamWriter> ChatServer_Impl(Function<TypeSerializer, S> writerFactory, Consumer<S> send, ServerSerializers serializers, BiConsumer<Consumer<SerializationStreamReader>, TypeSerializer> onMessage) {
+	private <S extends SerializationStreamWriter> ChatServer_Impl(
+			Function<TypeSerializer, S> writerFactory,
+			Consumer<S> send,
+			ServerSerializers serializers,
+			BiConsumer<Consumer<SerializationStreamReader>, TypeSerializer> onMessage
+	) {
 		super(
 				writerFactory,
 				send,
@@ -130,36 +141,44 @@ public class ChatServer_Impl extends AbstractEndpointImpl implements ChatServer 
 		}
 	}
 
+
+
+
+	// probably group these up, put in a shared abstract class?
 	@Override
 	public void onOpen(Connection connection, ChatClient client) {
-
+		throw new UnsupportedOperationException("Cannot be called from client code");
 	}
 
 	@Override
 	public void onClose(Connection connection, ChatClient client) {
-
+		throw new UnsupportedOperationException("Cannot be called from client code");
 	}
 
 	@Override
 	public void onError(Throwable error) {
-
+		throw new UnsupportedOperationException("Cannot be called from client code");
 	}
 
 	@Override
 	public ChatClient getClient() {
-		return null;
+		return client;
 	}
 
 	@Override
 	public void setClient(ChatClient client) {
-
+		this.client = client;
 	}
 
 	@Override
 	public void close() {
-
+		//TODO wire this up
 	}
 
+
+
+
+	// generated interface which will create our serializers
 	@SerializationWiring
 	public interface ServerSerializers {
 		TypeSerializer createSerializer();

@@ -35,6 +35,18 @@ import java.util.function.Function;
  * generated concrete implementations.
  */
 public abstract class AbstractEndpointImpl {
+	/**
+	 * Interface describing the constructor of any concrete subclass for use in wrapping these instances.
+	 */
+	@FunctionalInterface
+	public interface EndpointImplConstructor<E> {
+		<S extends SerializationStreamWriter> E create(
+				Function<TypeSerializer, S> writerFactory,
+				Consumer<S> send,
+				BiConsumer<Consumer<SerializationStreamReader>, TypeSerializer> onMessage
+		);
+	}
+
 	private final Function<TypeSerializer, SerializationStreamWriter> writerFactory;
 	private final Consumer<SerializationStreamWriter> send;
 

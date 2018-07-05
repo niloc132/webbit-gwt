@@ -22,6 +22,7 @@ package samples.easychatroom2.server;
 import com.colinalworth.gwt.websockets.server.AbstractServerImpl;
 import com.colinalworth.gwt.websockets.shared.Callback;
 import samples.easychatroom2.shared.ChatClient;
+import samples.easychatroom2.shared.ChatClient_Impl;
 import samples.easychatroom2.shared.ChatServer;
 
 import javax.websocket.server.ServerEndpoint;
@@ -34,7 +35,7 @@ public class ChatServerImpl extends AbstractServerImpl<ChatServer, ChatClient> i
 	private static final Map<ChatClient, String> loggedIn = Collections.synchronizedMap(new HashMap<ChatClient, String>());
 
 	public ChatServerImpl() {
-		super(ChatClient.class);
+		super(ChatClient_Impl::new);
 	}
 
 	@Override

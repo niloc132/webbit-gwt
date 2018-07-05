@@ -23,7 +23,7 @@ import com.colinalworth.gwt.websockets.client.ServerBuilder;
 import com.colinalworth.gwt.websockets.shared.Server;
 import elemental2.dom.DomGlobal;
 
-public abstract class ServerBuilderImpl<S extends Server<S, ?>> implements ServerBuilder<S> {
+public abstract class ServerBuilderImpl<S extends Server<? super S, ?>> implements ServerBuilder<S> {
 	private String url;
 	private URL urlBuilder = new URL(DomGlobal.window.location.getHref(), null);
 	private ConnectionErrorHandler errorHandler;

@@ -19,7 +19,6 @@
  */
 package com.colinalworth.gwt.websockets.apt;
 
-import com.colinalworth.gwt.websockets.client.WebSocket;
 import com.colinalworth.gwt.websockets.shared.Endpoint;
 import com.google.auto.common.BasicAnnotationProcessor.ProcessingStep;
 import com.google.common.collect.SetMultimap;
@@ -34,7 +33,6 @@ public class EndpointProcessingStep implements ProcessingStep {
 	public Set<? extends Class<? extends Annotation>> annotations() {
 		return Sets.newHashSet(
 				Endpoint.class
-//				WebSocket.class
 		);
 	}
 
