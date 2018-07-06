@@ -17,20 +17,21 @@
  * limitations under the License.
  * #L%
  */
-package com.colinalworth.gwt.websockets.apt;
+package com.colinalworth.gwt.websockets.apt.model;
 
-import com.google.auto.common.BasicAnnotationProcessor;
-import com.google.auto.service.AutoService;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.ExecutableType;
 
-import javax.annotation.processing.Processor;
-import java.util.Arrays;
+public class EndpointMethod {
 
-@AutoService(Processor.class)
-public class EndpointProcessor extends BasicAnnotationProcessor {
-	@Override
-	protected Iterable<? extends ProcessingStep> initSteps() {
-		return Arrays.asList(
-				new EndpointProcessingStep(processingEnv)
-		);
+	private final ExecutableType method;
+
+	public EndpointMethod(ExecutableType method) {
+		this.method = method;
+	}
+
+
+	public void validate(ProcessingEnvironment env) {
 	}
 }

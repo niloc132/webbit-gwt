@@ -32,9 +32,17 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class ChatClient_Impl extends AbstractEndpointImpl implements ChatClient {
-	private final ClientSerializers s;
+	// generated interface which will create our serializers
+	@SerializationWiring
+	public interface ClientSerializers {
+		TypeSerializer createSerializer();
 
-	private ChatServer server;
+		void writeString(String obj, SerializationStreamWriter writer);
+
+		String readString(SerializationStreamReader reader);
+	}
+
+	private final ClientSerializers s;
 
 	public <S extends SerializationStreamWriter> ChatClient_Impl(
 			Function<TypeSerializer, S> writerFactory,
@@ -145,6 +153,8 @@ public class ChatClient_Impl extends AbstractEndpointImpl implements ChatClient 
 
 
 	// probably group these up, put in a shared abstract class?
+	private ChatServer server;
+
 	@Override
 	protected void __onError(Throwable ex) {
 		getServer().onError(ex);
@@ -175,15 +185,4 @@ public class ChatClient_Impl extends AbstractEndpointImpl implements ChatClient 
 		throw new UnsupportedOperationException("This method is only intended to be called on the client itself");
 	}
 
-
-
-	// generated interface which will create our serializers
-	@SerializationWiring
-	public interface ClientSerializers {
-		TypeSerializer createSerializer();
-
-		void writeString(String obj, SerializationStreamWriter writer);
-
-		String readString(SerializationStreamReader reader);
-	}
 }

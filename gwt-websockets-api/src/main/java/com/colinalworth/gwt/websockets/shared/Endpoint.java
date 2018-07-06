@@ -40,6 +40,13 @@ package com.colinalworth.gwt.websockets.shared;
  */
 public @interface Endpoint {
 	/**
+	 * Marker type for use in Endpoint#value to indicate that there is no other
+	 * interface to process. Expected to be used for cases like RemoteService,
+	 * where callbacks are the only way to communicate back with the client.
+	 */
+	final class NoRemoteEndpoint {}
+
+	/**
 	 * Describes the matching remote interface that will mirror this one. Optional,
 	 * generally this will be implicitly recognized from the generics used when
 	 * implementing Client or Server. Defaults to Object, meaning "unset".

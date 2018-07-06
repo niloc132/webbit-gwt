@@ -40,6 +40,12 @@
 			<artifactId>gwt-websockets-client</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.colinalworth.gwt.websockets</groupId>
+			<artifactId>gwt-websockets-processor</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
 
 		<!-- Depend on gwt-user for compilation only -->
 		<dependency>
