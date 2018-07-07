@@ -74,4 +74,12 @@ public class EndpointPair {
 		result = 31 * result + right.hashCode();
 		return result;
 	}
+
+	@Override
+	public String toString() {
+		return "EndpointPair{" +
+				"left=" + left +
+				", right=" + right +
+				'}';
+	}
 }

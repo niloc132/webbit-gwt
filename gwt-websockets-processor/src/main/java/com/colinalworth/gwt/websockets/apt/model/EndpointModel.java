@@ -24,7 +24,6 @@ import com.colinalworth.gwt.websockets.shared.Endpoint;
 import com.colinalworth.gwt.websockets.shared.Server;
 import com.google.auto.common.MoreElements;
 import com.google.auto.common.MoreTypes;
-import com.google.common.base.Optional;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import com.vertispan.gwtapt.JTypeUtils;
@@ -38,7 +37,6 @@ import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
@@ -96,6 +94,14 @@ public class EndpointModel implements Comparable<EndpointModel> {
 		return ClassName.get(endpointElement.asType()).toString().compareTo(ClassName.get(o.endpointElement.asType()).toString());
 	}
 
+	@Override
+	public String toString() {
+		return "EndpointModel{" +
+				"endpointElement=" + endpointElement +
+				", extraContractType=" + extraContractType +
+				'}';
+	}
+
 	public EndpointModel getMatchingEndpoint(ProcessingEnvironment env) {
 		AnnotationMirror annotationMirror = MoreElements.getAnnotationMirror(endpointElement, Endpoint.class).get();
 		TypeMirror annotationValue = annotationMirror.getElementValues().entrySet()
@@ -106,7 +112,7 @@ public class EndpointModel implements Comparable<EndpointModel> {
 				.findFirst()
 				.orElse(null);
 		if (annotationValue != null) {
-			//something was provided, though it might just be the "nothing else to provide" sentinal 
+			//something was provided, though it might just be the "nothing else to provide" sentinal
 			return EndpointModel.from(MoreTypes.asElement(annotationValue), env);
 		}
 
@@ -117,7 +123,7 @@ public class EndpointModel implements Comparable<EndpointModel> {
 			throw new IllegalStateException("No corresponding endpoint found for " + this + ", did you forget to extend another interface, or add a value to @Endpoint?");
 		}
 
-		EndpointModel matching = from(env.getTypeUtils().asElement(extraContractType.getTypeArguments().get(0)), env);
+		EndpointModel matching = from(env.getTypeUtils().asElement(extraContractType.getTypeArguments().get(1)), env);
 
 //		// confirm that it matches us back again, else something is misconfigured
 //		if (!this.equals(matching.getMatchingEndpoint(env))) {
@@ -132,21 +138,25 @@ public class EndpointModel implements Comparable<EndpointModel> {
 				.stream()
 				.map(MoreTypes::asElement)
 				.map(Element::getEnclosedElements)
+				.map(ElementFilter::methodsIn)
 				.flatMap(List::stream)
-				
+
 				// skip all static and default methods
 				.filter(method -> !method.getModifiers().contains(Modifier.STATIC))
 				.filter(method -> !method.getModifiers().contains(Modifier.DEFAULT))
 
 				// skip any method declared on our extra contract type
-				.filter(method -> extraContractType == null || ClassName.get(method.getEnclosingElement().asType()).equals(ClassName.get(extraContractType)))
-				// skip anything on Object? TODO
+				.filter(method -> extraContractType == null || !ClassName.get(method.getEnclosingElement().asType()).equals(ClassName.get(extraContractType.asElement().asType())))
+				// skip anything on Object
+				.filter(method -> !Object.class.getName().equals(ClassName.get(method.getEnclosingElement().asType()).toString()))
 
 				// if necessary, express the method as it was declared on the original interface
-				.map(methodElt -> (ExecutableType) env.getTypeUtils().asMemberOf((DeclaredType) endpointElement.asType(), methodElt))
-
 				// model it, and return a list
-				.map(EndpointMethod::new)
+				.map(methodElt -> {
+					ExecutableType method = (ExecutableType) env.getTypeUtils().asMemberOf((DeclaredType) endpointElement.asType(), methodElt);
+					return new EndpointMethod(method, methodElt);
+				})
+
 				.peek(method -> method.validate(env))
 				.collect(Collectors.toList());
 	}
