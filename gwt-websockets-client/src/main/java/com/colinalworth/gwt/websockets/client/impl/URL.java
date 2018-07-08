@@ -19,16 +19,15 @@
  */
 package com.colinalworth.gwt.websockets.client.impl;
 
-import jsinterop.annotations.JsConstructor;
 import jsinterop.annotations.JsMethod;
-import jsinterop.annotations.JsOptional;
 import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsType;
 
 @JsType(namespace = JsPackage.GLOBAL, isNative = true)
 public class URL {
-	@JsConstructor
-	public URL(String url, @JsOptional String base) {
+	public URL(String url, String base) {
+	}
+	public URL(String url) {
 	}
 
 	public String hash;

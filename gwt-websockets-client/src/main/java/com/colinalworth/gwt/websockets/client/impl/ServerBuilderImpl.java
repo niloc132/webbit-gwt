@@ -25,7 +25,7 @@ import elemental2.dom.DomGlobal;
 
 public abstract class ServerBuilderImpl<S extends Server<? super S, ?>> implements ServerBuilder<S> {
 	private String url;
-	private URL urlBuilder = new URL(DomGlobal.window.location.getHref(), null);
+	private URL urlBuilder = new URL(DomGlobal.window.location.getHref());
 	private ConnectionErrorHandler errorHandler;
 
 	/**

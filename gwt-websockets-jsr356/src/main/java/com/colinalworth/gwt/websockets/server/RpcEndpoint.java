@@ -55,8 +55,12 @@ public class RpcEndpoint<S extends Server<S, C>, C extends Client<C, S>> {
 				writer -> session.getAsyncRemote().sendText(writer.toString()),
 				(onMessage, serializer) -> {
 					// using this in place of @OnMessage
-					session.addMessageHandler((Whole<String>) message -> {
-						onMessage.accept(new StringSerializationStreamReader(serializer, message));
+					// using a full anon inner class since a lambda makes jetty break
+					session.addMessageHandler(new Whole<String>() {
+						@Override
+						public void onMessage(String message) {
+							onMessage.accept(new StringSerializationStreamReader(serializer, message));
+						}
 					});
 				}
 		));

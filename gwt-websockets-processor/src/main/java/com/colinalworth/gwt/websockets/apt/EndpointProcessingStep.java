@@ -140,7 +140,7 @@ public class EndpointProcessingStep implements ProcessingStep {
 				.addParameter(writerFactoryType, "writerFactory")
 				.addParameter(sendType, "send")
 				.addParameter(onMessageType, "onMessage")
-				.addStatement("this(writerFactory, send, null, onMessage)", serializerType)
+				.addStatement("this(writerFactory, send, new $T_Impl(), onMessage)", serializerType)
 				.addModifiers(Modifier.PUBLIC)
 				.build());
 		builder.addMethod(MethodSpec.constructorBuilder()
