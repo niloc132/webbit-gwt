@@ -82,8 +82,12 @@ public abstract class AbstractEndpointImpl {
 
 	public void __onMessage(SerializationStreamReader reader) {
 		try {
+			//thrown away, but they are still in the payoad for now
+			String moduleBaseURL = reader.readString();
+			String spsn = reader.readString();
+
 			int recipient = reader.readInt();
-			if (recipient > 0) {
+			if (recipient >= 0) {
 				__invoke(recipient, reader);
 			} else {
 				ReadingCallback<?, ?> callback = callbacks.get(-recipient);
@@ -113,9 +117,10 @@ public abstract class AbstractEndpointImpl {
 		void send() throws SerializationException;
 	}
 
-	protected void __send(Send s) {
+	protected void __send(int recipient, Send s) {
 		__startCall();
 		try {
+			activeWriter.writeInt(recipient);
 			s.send();
 			__endCall();
 		} catch (SerializationException e) {
@@ -125,13 +130,14 @@ public abstract class AbstractEndpointImpl {
 			activeWriter = null;
 		}
 	}
-	protected void __send(Send s, ReadingCallback<?, ?> callback) {
+	protected void __send(int recipient, Send s, ReadingCallback<?, ?> callback) {
 		__startCall();
 		try {
-			int callbackId = nextCallbackId++;
+			activeWriter.writeInt(recipient);
 
 			// add the callbackId to the message to send so the remote end knows it will need a callback
 			// object when handling the rest of the body
+			int callbackId = nextCallbackId++;
 			activeWriter.writeInt(callbackId);
 			s.send();
 

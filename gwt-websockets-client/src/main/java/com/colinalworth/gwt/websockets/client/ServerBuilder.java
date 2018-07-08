@@ -24,7 +24,11 @@ import com.colinalworth.gwt.websockets.shared.Server;
 import com.colinalworth.gwt.websockets.shared.impl.AbstractEndpointImpl.EndpointImplConstructor;
 import com.vertispan.serial.streams.string.StringSerializationStreamReader;
 import com.vertispan.serial.streams.string.StringSerializationStreamWriter;
+import elemental2.dom.DomGlobal;
 import elemental2.dom.WebSocket;
+import elemental2.dom.WebSocket.OnopenFn;
+import jsinterop.base.Js;
+import jsinterop.base.JsPropertyMap;
 
 /**
  * Base interface to be extended and given a concrete Server interface in a client project,
@@ -110,8 +114,12 @@ public interface ServerBuilder<S extends Server<? super S, ?>> {
 			@Override
 			public E start() {
 				WebSocket socket = new WebSocket(getUrl());
-				return constructor.create(
-						serializer -> new StringSerializationStreamWriter(serializer, "", ""),
+				E instance = constructor.create(
+						serializer -> {
+							StringSerializationStreamWriter writer = new StringSerializationStreamWriter(serializer, "", "");
+							writer.prepareToWrite();
+							return writer;
+						},
 						stream -> socket.send(stream.toString()),
 						(send, serializer) -> {
 							socket.onmessage = message -> {
@@ -120,6 +128,23 @@ public interface ServerBuilder<S extends Server<? super S, ?>> {
 							};
 						}
 				);
+				socket.onclose = e -> {
+					instance.getClient().onClose();
+					return null;
+				};
+				socket.onopen = e -> {
+					instance.getClient().onOpen();
+					return null;
+				};
+				Js.<JsPropertyMap<OnopenFn>>cast(socket).set("onerror", e -> {
+					if (getErrorHandler() != null) {
+						getErrorHandler().onError(e);
+					} else {
+						DomGlobal.console.log("A transport error occurred - pass a error handler to your server builder to handle this yourself", e);
+					}
+					return null;
+				});
+				return instance;
 			}
 		};
 	}

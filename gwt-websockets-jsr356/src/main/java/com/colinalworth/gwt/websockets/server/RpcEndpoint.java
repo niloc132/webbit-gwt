@@ -29,13 +29,17 @@ import com.vertispan.serial.streams.string.StringSerializationStreamWriter;
 import javax.websocket.MessageHandler.Whole;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
+import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import java.io.IOException;
+import java.util.function.Consumer;
 
 public class RpcEndpoint<S extends Server<S, C>, C extends Client<C, S>> {
 	private final S server;
 	private final EndpointImplConstructor<C> clientConstructor;
+
+	private Consumer<String> handleMessage;
 
 	public RpcEndpoint(S server, EndpointImplConstructor<C> clientConstructor) {
 		this.server = server;
@@ -50,21 +54,28 @@ public class RpcEndpoint<S extends Server<S, C>, C extends Client<C, S>> {
 
 	@OnOpen
 	public void onOpen(Session session) {
-		server.setClient(clientConstructor.create(
-				serializer -> new StringSerializationStreamWriter(serializer, "", ""),
+		C instance = clientConstructor.create(
+				serializer -> {
+					StringSerializationStreamWriter writer = new StringSerializationStreamWriter(serializer, "", "");
+					writer.prepareToWrite();
+					return writer;
+				},
 				writer -> session.getAsyncRemote().sendText(writer.toString()),
 				(onMessage, serializer) -> {
-					// using this in place of @OnMessage
-					// using a full anon inner class since a lambda makes jetty break
-					session.addMessageHandler(new Whole<String>() {
-						@Override
-						public void onMessage(String message) {
-							onMessage.accept(new StringSerializationStreamReader(serializer, message));
-						}
-					});
+					// using this to delegate to OnMessage, not working otherwise
+					handleMessage = message -> onMessage.accept(new StringSerializationStreamReader(serializer, message));
 				}
-		));
+		);
+		server.setClient(instance);
+		instance.setServer(server);
+
+		session.setMaxIdleTimeout(0);
 		server.onOpen(new Jsr356Connection(session), server.getClient());
+	}
+
+	@OnMessage
+	public void onMessage(String message) {
+		handleMessage.accept(message);
 	}
 
 	@OnClose
