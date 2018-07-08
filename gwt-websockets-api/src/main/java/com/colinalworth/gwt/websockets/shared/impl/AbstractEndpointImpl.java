@@ -40,9 +40,9 @@ public abstract class AbstractEndpointImpl {
 	 */
 	@FunctionalInterface
 	public interface EndpointImplConstructor<E> {
-		<S extends SerializationStreamWriter> E create(
-				Function<TypeSerializer, S> writerFactory,
-				Consumer<S> send,
+		<W extends SerializationStreamWriter> E create(
+				Function<TypeSerializer, W> writerFactory,
+				Consumer<W> send,
 				BiConsumer<Consumer<SerializationStreamReader>, TypeSerializer> onMessage
 		);
 	}
@@ -59,9 +59,9 @@ public abstract class AbstractEndpointImpl {
 	private Map<Integer, ReadingCallback<?,?>> callbacks = new HashMap<>();
 
 
-	protected <S extends SerializationStreamWriter> AbstractEndpointImpl(
-			Function<TypeSerializer, S> writerFactory,
-			Consumer<S> send,
+	protected <W extends SerializationStreamWriter> AbstractEndpointImpl(
+			Function<TypeSerializer, W> writerFactory,
+			Consumer<W> send,
 			TypeSerializer serializer,
 			BiConsumer<Consumer<SerializationStreamReader>, TypeSerializer> onMessage) {
 		this.writerFactory = (Function<TypeSerializer, SerializationStreamWriter>) writerFactory;

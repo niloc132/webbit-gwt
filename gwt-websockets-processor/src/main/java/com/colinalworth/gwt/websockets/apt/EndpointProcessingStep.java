@@ -93,10 +93,16 @@ public class EndpointProcessingStep implements ProcessingStep {
 		// set up basics, declare superclass (and extra contract wiring?)
 		String packageName = model.getPackage(processingEnv);
 		Builder builder = TypeSpec.classBuilder(model.getGeneratedTypeName())
-				.superclass(ClassName.get(AbstractEndpointImpl.class))
 				.addSuperinterface(model.getInterface())
 				.addAnnotation(AnnotationSpec.builder(Generated.class).addMember("value", "\"$L\"", EndpointProcessor.class.getCanonicalName()).build())
 				.addModifiers(Modifier.PUBLIC);
+
+		if (model.getSpecifiedSuperclass(processingEnv) != null) {
+			builder.superclass(model.getSpecifiedSuperclass(processingEnv));
+		} else {
+			builder.superclass(ClassName.get(AbstractEndpointImpl.class));
+		}
+
 		// create the serializer type
 		TypeSpec serializer = declareSerializer(model, remoteModel);
 		builder.addType(serializer);
@@ -218,7 +224,7 @@ public class EndpointProcessingStep implements ProcessingStep {
 				invokeBody.addStatement("callbackId = reader.readInt()");
 			}
 
-			String remoteGetter = "getClient";
+			String remoteGetter = model.getRemoteEndpointGetterMethodName();
 			invokeBody.add("$L().$L(", remoteGetter, remoteMethod.getElement().getSimpleName().toString());
 			boolean first = true;
 			// Note the use of "types to write" - this seems backward, but we're calling into the
@@ -277,7 +283,7 @@ public class EndpointProcessingStep implements ProcessingStep {
 				.addModifiers(Modifier.PROTECTED)
 				.build());
 
-		// any extra contract methods
+		// any extra contract methods?
 
 
 		try {

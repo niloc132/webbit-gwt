@@ -52,4 +52,17 @@ public @interface Endpoint {
 	 * implementing Client or Server. Defaults to Object, meaning "unset".
 	 */
 	Class<?> value() default Object.class;
+
+	/**
+	 * Marks a method which will return the remote endpoint for this type. Intended for use
+	 * when {@link Endpoint#value()} is assigned rather than extending an existing interface,
+	 * so that the generated code knows where to check for the local copy of an endpoint.
+	 *
+	 * Can be omitted when value=NoRemoteEndpoint.
+	 */
+	public @interface RemoteEndpointSupplier {}
+
+	@interface BaseClass {
+		Class<?> value();
+	}
 }

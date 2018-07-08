@@ -21,23 +21,26 @@ package com.colinalworth.gwt.websockets.apt.model;
 
 import com.colinalworth.gwt.websockets.shared.Client;
 import com.colinalworth.gwt.websockets.shared.Endpoint;
+import com.colinalworth.gwt.websockets.shared.Endpoint.BaseClass;
+import com.colinalworth.gwt.websockets.shared.Endpoint.RemoteEndpointSupplier;
 import com.colinalworth.gwt.websockets.shared.Server;
-import com.google.auto.common.MoreElements;
 import com.google.auto.common.MoreTypes;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.vertispan.gwtapt.JTypeUtils;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -103,15 +106,10 @@ public class EndpointModel implements Comparable<EndpointModel> {
 	}
 
 	public EndpointModel getMatchingEndpoint(ProcessingEnvironment env) {
-		AnnotationMirror annotationMirror = MoreElements.getAnnotationMirror(endpointElement, Endpoint.class).get();
-		TypeMirror annotationValue = annotationMirror.getElementValues().entrySet()
-				.stream()
-				.filter(entry -> entry.getKey().getSimpleName().toString().equals("value"))
-				.map(Entry::getValue)
-				.map(TypeMirror.class::cast)
-				.findFirst()
-				.orElse(null);
-		if (annotationValue != null) {
+		TypeMirror annotationValue = readClassValueFromAnnotation(env, () -> endpointElement.getAnnotation(Endpoint.class).value());
+		assert !annotationValue.getKind().isPrimitive();
+
+		if (!TypeName.get(annotationValue).toString().equals(Object.class.getName())) {
 			//something was provided, though it might just be the "nothing else to provide" sentinal
 			return EndpointModel.from(MoreTypes.asElement(annotationValue), env);
 		}
@@ -171,5 +169,46 @@ public class EndpointModel implements Comparable<EndpointModel> {
 
 	public TypeName getInterface() {
 		return ClassName.get(endpointElement.asType());
+	}
+
+	public TypeName getSpecifiedSuperclass(ProcessingEnvironment env) {
+		if (extraContractType != null) {
+			BaseClass annotation = extraContractType.asElement().getAnnotation(BaseClass.class);
+			DeclaredType supertype = (DeclaredType) readClassValueFromAnnotation(env, annotation::value);
+			if (extraContractType.getTypeArguments().isEmpty()) {
+				return ClassName.get(supertype);
+			}
+			return ParameterizedTypeName.get(
+					ClassName.get((TypeElement) supertype.asElement()),
+					JTypeUtils.findParameterizationOf(env.getTypeUtils(), endpointElement.asType(), extraContractType)
+							.stream()
+							.map(ClassName::get)
+							.toArray(TypeName[]::new)
+			);
+		}
+		return null;
+	}
+
+	private static TypeMirror readClassValueFromAnnotation(ProcessingEnvironment env, Supplier<Class> code) {
+		try {
+			return env.getElementUtils().getTypeElement(code.get().getName()).asType();
+		} catch (MirroredTypeException mte) {
+			return mte.getTypeMirror();
+		}
+	}
+
+	public String getRemoteEndpointGetterMethodName() {
+		final Element typeToCheck;
+		if (extraContractType != null) {
+			typeToCheck = extraContractType.asElement();
+		} else {
+			typeToCheck = endpointElement;
+		}
+		return ElementFilter.methodsIn(typeToCheck.getEnclosedElements())
+				.stream()
+				.filter(m -> m.getAnnotation(RemoteEndpointSupplier.class) != null)
+				.findFirst()
+				.map(m -> m.getSimpleName().toString())
+				.orElse(null);
 	}
 }

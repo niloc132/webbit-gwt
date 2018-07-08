@@ -19,6 +19,11 @@
  */
 package com.colinalworth.gwt.websockets.shared;
 
+import com.colinalworth.gwt.websockets.shared.Endpoint.BaseClass;
+import com.colinalworth.gwt.websockets.shared.Endpoint.RemoteEndpointSupplier;
+import com.colinalworth.gwt.websockets.shared.impl.AbstractWebSocketServerImpl;
+
+@BaseClass(AbstractWebSocketServerImpl.class)
 public interface Server<S extends Server<S,C>, C extends Client<C,S>> {
 
 	/**
@@ -44,6 +49,7 @@ public interface Server<S extends Server<S,C>, C extends Client<C,S>> {
 	 * passed to {@link #setClient(Client)} (if on the server, within the current thread).
 	 * @return the current client object in use
 	 */
+	@RemoteEndpointSupplier
 	C getClient();
 
 	/**

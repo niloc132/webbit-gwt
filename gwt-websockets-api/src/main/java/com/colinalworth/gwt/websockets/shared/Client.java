@@ -19,6 +19,10 @@
  */
 package com.colinalworth.gwt.websockets.shared;
 
+import com.colinalworth.gwt.websockets.shared.Endpoint.BaseClass;
+import com.colinalworth.gwt.websockets.shared.Endpoint.RemoteEndpointSupplier;
+import com.colinalworth.gwt.websockets.shared.impl.AbstractWebSocketClientImpl;
+
 /**
  * Starting interface for building the methods the server may call on the client. User code may
  * provide an instance of this type to a Server instance created using GWT.create, and Client
@@ -27,7 +31,7 @@ package com.colinalworth.gwt.websockets.shared;
  * @see Server
  *
  */
-
+@BaseClass(AbstractWebSocketClientImpl.class)
 public interface Client<C extends Client<C,S>, S extends Server<S,C>> {
 
 	/**
@@ -52,5 +56,6 @@ public interface Client<C extends Client<C,S>, S extends Server<S,C>> {
 
 	void setServer(S server);
 
+	@RemoteEndpointSupplier
 	S getServer();
 }
