@@ -19,11 +19,13 @@
  */
 package simpleworker.common.client;
 
-import com.colinalworth.gwt.worker.client.Endpoint;
+import com.colinalworth.gwt.websockets.shared.Endpoint;
+import com.colinalworth.gwt.worker.client.MessagePortEndpoint;
 
 /**
  * Created by colin on 2/10/16.
  */
-public interface MyHost extends Endpoint<MyHost, MyWorker> {
+@Endpoint
+public interface MyHost extends MessagePortEndpoint<MyWorker> {
 	void pong();
 }

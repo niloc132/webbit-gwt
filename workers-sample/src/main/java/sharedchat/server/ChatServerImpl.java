@@ -21,11 +21,10 @@ package sharedchat.server;
 
 import com.colinalworth.gwt.websockets.server.AbstractServerImpl;
 import sharedchat.common.shared.ChatClient;
+import sharedchat.common.shared.ChatClient_Impl;
 import sharedchat.common.shared.ChatServer;
 
 import javax.websocket.server.ServerEndpoint;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,7 +33,7 @@ public class ChatServerImpl extends AbstractServerImpl<ChatServer, ChatClient> i
 	private static final Map<ChatClient, String> loggedIn = new ConcurrentHashMap<>();
 
 	public ChatServerImpl() {
-		super(ChatClient.class);
+		super(ChatClient_Impl::new);
 	}
 
 	@Override

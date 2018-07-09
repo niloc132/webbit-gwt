@@ -19,8 +19,8 @@
  */
 package simpleworker.ui.client;
 
+import com.colinalworth.gwt.websockets.shared.Callback;
 import com.colinalworth.gwt.worker.client.WorkerFactory;
-import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -30,13 +30,13 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.RootPanel;
 import simpleworker.common.client.MyHost;
 import simpleworker.common.client.MyWorker;
+import simpleworker.common.client.MyWorker_Impl;
 
 public class AppUI implements EntryPoint {
-	public interface Factory extends WorkerFactory<MyWorker, MyHost> {}
 
 	@Override
 	public void onModuleLoad() {
-		Factory factory = GWT.create(Factory.class);//new GeneratedWorkerFactory();
+		WorkerFactory<MyWorker, MyHost> factory = WorkerFactory.of(MyWorker_Impl::new);
 
 		final MyWorker worker = factory.createDedicatedWorker(GWT.getModuleBaseForStaticFiles() + "../simpleworker_worker/worker.js", new MyHost() {
 			private MyWorker remote;

@@ -19,7 +19,8 @@
  */
 package sharedchat.common.client;
 
-import com.colinalworth.gwt.worker.client.Endpoint;
+import com.colinalworth.gwt.websockets.shared.Endpoint;
+import com.colinalworth.gwt.worker.client.MessagePortEndpoint;
 import sharedchat.common.shared.ChatEvent;
 
 import java.util.List;
@@ -27,7 +28,8 @@ import java.util.List;
 /**
  * Created by colin on 2/6/17.
  */
-public interface ChatPage extends Endpoint<ChatPage, ChatWorker> {
+@Endpoint
+public interface ChatPage extends MessagePortEndpoint<ChatWorker> {
 	void init(String username, List<ChatEvent> events);
 
 	void connected();

@@ -20,10 +20,12 @@
 package sharedchat.common.shared;
 
 import com.colinalworth.gwt.websockets.shared.Client;
+import com.colinalworth.gwt.websockets.shared.Endpoint;
 
 /**
  * Created by colin on 2/7/17.
  */
+@Endpoint
 public interface ChatClient extends Client<ChatClient, ChatServer> {
 	/**
 	 * Tells the client that a user posted a message to the chat room

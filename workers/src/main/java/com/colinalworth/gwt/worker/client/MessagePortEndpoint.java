@@ -19,11 +19,14 @@
  */
 package com.colinalworth.gwt.worker.client;
 
-/**
- * Created by colin on 1/14/16.
- */
-public interface Endpoint<LOCAL extends Endpoint<LOCAL, REMOTE>, REMOTE extends Endpoint<REMOTE, LOCAL>> {
+import com.colinalworth.gwt.websockets.shared.Endpoint;
+import com.colinalworth.gwt.websockets.shared.Endpoint.BaseClass;
+import com.colinalworth.gwt.worker.client.impl.AbstractWorkerEndpointImpl;
 
-	void setRemote(REMOTE remote);
-	REMOTE getRemote();
+@BaseClass(AbstractWorkerEndpointImpl.class)
+public interface MessagePortEndpoint<E> {
+	void setRemote(E remote);
+
+	@Endpoint.RemoteEndpointSupplier
+	E getRemote();
 }

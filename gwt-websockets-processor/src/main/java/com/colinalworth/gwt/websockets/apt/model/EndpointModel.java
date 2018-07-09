@@ -19,11 +19,9 @@
  */
 package com.colinalworth.gwt.websockets.apt.model;
 
-import com.colinalworth.gwt.websockets.shared.Client;
 import com.colinalworth.gwt.websockets.shared.Endpoint;
 import com.colinalworth.gwt.websockets.shared.Endpoint.BaseClass;
 import com.colinalworth.gwt.websockets.shared.Endpoint.RemoteEndpointSupplier;
-import com.colinalworth.gwt.websockets.shared.Server;
 import com.google.auto.common.MoreTypes;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -32,6 +30,7 @@ import com.vertispan.gwtapt.JTypeUtils;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -50,19 +49,19 @@ import java.util.stream.Collectors;
 public class EndpointModel implements Comparable<EndpointModel> {
 
 	public static EndpointModel from(Element annotatedEndpoint, ProcessingEnvironment env) {
-		TypeMirror clientType = env.getElementUtils().getTypeElement(Client.class.getName()).asType();
-		DeclaredType match = JTypeUtils.asParameterizationOf(env.getTypeUtils(), annotatedEndpoint.asType(), clientType);
-		if (match != null) {
-			return new EndpointModel(annotatedEndpoint, match);
-		}
+		DeclaredType match = JTypeUtils.getFlattenedSupertypeHierarchy(env.getTypeUtils(), annotatedEndpoint.asType())
+				.stream()
+				.filter(type -> {
+					DeclaredType declaredType = (DeclaredType) type;
 
-		TypeMirror serverType = env.getElementUtils().getTypeElement(Server.class.getName()).asType();
-		match = JTypeUtils.asParameterizationOf(env.getTypeUtils(), annotatedEndpoint.asType(), serverType);
-		if (match != null) {
-			return new EndpointModel(annotatedEndpoint, match);
-		}
+					return declaredType.asElement().getAnnotation(BaseClass.class) != null;
+				})
+				.findFirst()
+				//this shouldn't be necessary, except for the cast
+				.map(type -> JTypeUtils.asParameterizationOf(env.getTypeUtils(), annotatedEndpoint.asType(), type))
+				.orElse(null);
 
-		return new EndpointModel(annotatedEndpoint, null);
+		return new EndpointModel(annotatedEndpoint, match);
 	}
 
 	// the interface to be implemented
@@ -121,7 +120,8 @@ public class EndpointModel implements Comparable<EndpointModel> {
 			throw new IllegalStateException("No corresponding endpoint found for " + this + ", did you forget to extend another interface, or add a value to @Endpoint?");
 		}
 
-		EndpointModel matching = from(env.getTypeUtils().asElement(extraContractType.getTypeArguments().get(1)), env);
+		ExecutableType remoteEndpointType = (ExecutableType) env.getTypeUtils().asMemberOf((DeclaredType) endpointElement.asType(), getRemoteEndpointGetter());
+		EndpointModel matching = from(env.getTypeUtils().asElement(remoteEndpointType.getReturnType()), env);
 
 //		// confirm that it matches us back again, else something is misconfigured
 //		if (!this.equals(matching.getMatchingEndpoint(env))) {
@@ -198,6 +198,10 @@ public class EndpointModel implements Comparable<EndpointModel> {
 	}
 
 	public String getRemoteEndpointGetterMethodName() {
+		return getRemoteEndpointGetter().getSimpleName().toString();
+	}
+
+	private ExecutableElement getRemoteEndpointGetter() {
 		final Element typeToCheck;
 		if (extraContractType != null) {
 			typeToCheck = extraContractType.asElement();
@@ -208,7 +212,6 @@ public class EndpointModel implements Comparable<EndpointModel> {
 				.stream()
 				.filter(m -> m.getAnnotation(RemoteEndpointSupplier.class) != null)
 				.findFirst()
-				.map(m -> m.getSimpleName().toString())
-				.orElse(null);
+				.orElseThrow(IllegalStateException::new);
 	}
 }

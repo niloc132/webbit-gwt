@@ -23,12 +23,12 @@ import com.colinalworth.gwt.websockets.client.ServerBuilder;
 import com.colinalworth.gwt.worker.client.WorkerFactory;
 import com.colinalworth.gwt.worker.client.worker.MessagePort;
 import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.core.client.GWT;
 import jsinterop.annotations.JsFunction;
 import jsinterop.annotations.JsPackage;
 import jsinterop.annotations.JsProperty;
 import jsinterop.annotations.JsType;
 import sharedchat.common.client.ChatPage;
+import sharedchat.common.client.ChatPage_Impl;
 import sharedchat.common.client.ChatWorker;
 import sharedchat.common.shared.ChatClient;
 import sharedchat.common.shared.ChatEvent;
@@ -36,6 +36,7 @@ import sharedchat.common.shared.ChatJoin;
 import sharedchat.common.shared.ChatLeave;
 import sharedchat.common.shared.ChatMessage;
 import sharedchat.common.shared.ChatServer;
+import sharedchat.common.shared.ChatServer_Impl;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -50,14 +51,9 @@ import java.util.function.Consumer;
  */
 public class AppWorker implements EntryPoint {
 
-	//generated code
-	public interface AppWorkerFactory extends WorkerFactory<ChatPage, ChatWorker> {}
-	interface ChatServerBuilder extends ServerBuilder<ChatServer> {}
-
-
 	//factories to handle communication
-	ChatServerBuilder serverBuilder = GWT.create(ChatServerBuilder.class);
-	AppWorkerFactory pageCommunicationFactory = GWT.create(AppWorkerFactory.class);
+	private ServerBuilder<ChatServer> serverBuilder = ServerBuilder.of(ChatServer_Impl::new);
+	private WorkerFactory<ChatPage, ChatWorker> pageCommunicationFactory = WorkerFactory.of(ChatPage_Impl::new);
 
 	//app state
 	private String username;
@@ -159,6 +155,16 @@ public class AppWorker implements EntryPoint {
 			@Override
 			public void part(String username) {
 				handleEvent(new ChatLeave(username));
+			}
+
+			@Override
+			public void setServer(ChatServer server) {
+
+			}
+
+			@Override
+			public ChatServer getServer() {
+				return null;
 			}
 		});
 	}

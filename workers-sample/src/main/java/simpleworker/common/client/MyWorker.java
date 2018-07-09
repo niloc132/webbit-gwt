@@ -19,13 +19,15 @@
  */
 package simpleworker.common.client;
 
-import com.colinalworth.gwt.worker.client.Endpoint;
-import com.google.gwt.core.client.Callback;
+import com.colinalworth.gwt.websockets.shared.Callback;
+import com.colinalworth.gwt.websockets.shared.Endpoint;
+import com.colinalworth.gwt.worker.client.MessagePortEndpoint;
 
 /**
  * Created by colin on 2/10/16.
  */
-public interface MyWorker extends Endpoint<MyWorker, MyHost> {
+@Endpoint
+public interface MyWorker extends MessagePortEndpoint<MyHost> {
 	void ping();
 
 	void split(String pattern, String input, Callback<String[], Throwable> callback);

@@ -19,12 +19,26 @@
  */
 package com.colinalworth.gwt.worker.client;
 
+import com.colinalworth.gwt.websockets.shared.impl.AbstractEndpointImpl.EndpointImplConstructor;
+import com.colinalworth.gwt.worker.client.impl.AbstractWorkerFactoryImpl;
 import com.colinalworth.gwt.worker.client.worker.MessagePort;
+import com.vertispan.serial.streams.bytebuffer.ByteBufferSerializationStreamReader;
+import com.vertispan.serial.streams.bytebuffer.ByteBufferSerializationStreamWriter;
+import elemental2.core.ArrayBuffer;
+import elemental2.core.JsArray;
+import elemental2.core.JsString;
+import jsinterop.base.Any;
+import jsinterop.base.Js;
+import playn.html.HasArrayBufferView;
+import playn.html.TypedArrayHelper;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 /**
  * todo how to differentiate between shared, dedicated, service workers...
  */
-public interface WorkerFactory<R extends Endpoint<R, L>, L extends Endpoint<L, R>> {
+public interface WorkerFactory<R extends MessagePortEndpoint<L>, L extends MessagePortEndpoint<R>> {
 
 	/**
 	 * Creates a worker with the remote JS connected to the local endpoint.
@@ -37,4 +51,34 @@ public interface WorkerFactory<R extends Endpoint<R, L>, L extends Endpoint<L, R
 	R createSharedWorker(String pathToJs, L local);
 
 	R wrapRemoteMessagePort(MessagePort remote, L local);
+
+	static <R extends MessagePortEndpoint<L>, L extends MessagePortEndpoint<R>> WorkerFactory<R, L>
+	of(EndpointImplConstructor<R> constructor) {
+		return new AbstractWorkerFactoryImpl<R, L>() {
+			@Override
+			protected R create(MessagePort worker) {
+				worker.start();
+				return constructor.create(
+						ByteBufferSerializationStreamWriter::new,
+						stream -> {
+							JsString[] stringTable = Js.<JsArray<JsString>>uncheckedCast(stream.getFinishedStringTable()).slice();
+							ArrayBuffer payload = Js.cast(((HasArrayBufferView) stream.getPayloadBytes()).getTypedArray().buffer());
+
+							worker.postMessage(new JsArray<>(payload, stringTable), new JsArray<>(payload));
+						},
+						(send, serializer) -> {
+							worker.addMessageHandler(message -> {
+								JsArray<Any> data = message.getData();
+								ByteBuffer byteBuffer = TypedArrayHelper.wrap(data.getAt(0).cast());
+								byteBuffer.order(ByteOrder.nativeOrder());
+								String[] strings = data.getAt(1).cast();
+								send.accept(new ByteBufferSerializationStreamReader(serializer, byteBuffer, strings));
+							});
+						}
+
+
+				);
+			}
+		};
+	}
 }

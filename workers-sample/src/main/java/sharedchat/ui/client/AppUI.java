@@ -21,7 +21,6 @@ package sharedchat.ui.client;
 
 import com.colinalworth.gwt.worker.client.WorkerFactory;
 import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Position;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -34,6 +33,7 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import sharedchat.common.client.ChatPage;
 import sharedchat.common.client.ChatWorker;
+import sharedchat.common.client.ChatWorker_Impl;
 import sharedchat.common.shared.ChatEvent;
 import sharedchat.common.shared.ChatJoin;
 import sharedchat.common.shared.ChatLeave;
@@ -48,10 +48,9 @@ public class AppUI implements EntryPoint {
 
 	private PopupPanel popup;
 
-	public interface Factory extends WorkerFactory<ChatWorker, ChatPage> {}
 	@Override
 	public void onModuleLoad() {
-		Factory sharedWorkerFactory = GWT.create(Factory.class);
+		WorkerFactory<ChatWorker, ChatPage> sharedWorkerFactory = WorkerFactory.of(ChatWorker_Impl::new);
 
 		ChatClientWidget widget = new ChatClientWidget();
 

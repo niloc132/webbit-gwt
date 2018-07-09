@@ -22,7 +22,28 @@
 
 		<dependency>
 			<groupId>com.colinalworth.gwt.websockets</groupId>
-			<artifactId>javaee-websocket-gwt-rpc</artifactId>
+			<artifactId>gwt-websockets-processor</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.vertispan.serial</groupId>
+			<artifactId>bytebuffer-serializer-streams</artifactId>
+			<version>1.0-SNAPSHOT</version>
+			<classifier>sources</classifier>
+		</dependency>
+
+		<dependency>
+			<groupId>com.vertispan.serial</groupId>
+			<artifactId>string-serializer-streams</artifactId>
+			<version>1.0-SNAPSHOT</version>
+			<classifier>sources</classifier>
+		</dependency>
+
+		<dependency>
+			<groupId>com.colinalworth.gwt.websockets</groupId>
+			<artifactId>gwt-websockets-jsr356</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
@@ -35,6 +56,14 @@
 	</dependencies>
 	<build>
 		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<compilerArgs>
+						<arg>-Aserial.knownSubtypes=jre.txt</arg>
+					</compilerArgs>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>${gwt.plugin.groupId}</groupId>
 				<artifactId>gwt-maven-plugin</artifactId>

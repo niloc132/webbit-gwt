@@ -19,12 +19,14 @@
  */
 package sharedchat.common.client;
 
-import com.colinalworth.gwt.worker.client.Endpoint;
+import com.colinalworth.gwt.websockets.shared.Endpoint;
+import com.colinalworth.gwt.worker.client.MessagePortEndpoint;
 
 /**
  * Created by colin on 2/6/17.
  */
-public interface ChatWorker extends Endpoint<ChatWorker, ChatPage> {
+@Endpoint
+public interface ChatWorker extends MessagePortEndpoint<ChatPage> {
 	void login(String username);
 
 	void logout();

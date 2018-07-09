@@ -19,24 +19,23 @@
  */
 package simpleworker.worker.client;
 
+import com.colinalworth.gwt.websockets.shared.Callback;
 import com.colinalworth.gwt.worker.client.WorkerFactory;
 import com.colinalworth.gwt.worker.client.worker.MessagePort;
-import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.core.client.GWT;
 import simpleworker.common.client.MyHost;
+import simpleworker.common.client.MyHost_Impl;
 import simpleworker.common.client.MyWorker;
 
 /**
  * Created by colin on 1/21/16.
  */
 public class AppWorker implements EntryPoint {
-	public interface Factory extends WorkerFactory<MyHost, MyWorker> {}
 
 	@Override
 	public void onModuleLoad() {
 
-		Factory factory = GWT.create(Factory.class);//new GeneratedWorkerFactory();
+		WorkerFactory<MyHost, MyWorker> factory = WorkerFactory.of(MyHost_Impl::new);
 
 		factory.wrapRemoteMessagePort(self(), new MyWorker() {
 			@Override
