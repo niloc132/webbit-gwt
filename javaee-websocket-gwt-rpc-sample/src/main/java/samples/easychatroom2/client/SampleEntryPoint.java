@@ -39,7 +39,7 @@ public class SampleEntryPoint implements EntryPoint {
 		// We could create the 'server' itself, but then we have to wire up the websocket
 		// stuff, instead, we use a builder, which lets us set the URL once and create
 		// new instances on demand
-		ServerBuilder<ChatServer_Impl> builder = ServerBuilder.of(ChatServer_Impl::new);
+		ServerBuilder<ChatServer> builder = ServerBuilder.of(ChatServer_Impl::new);
 
 		// Set the url directly, or use the setHost, setPort, etc calls, based on the
 		// page's own url

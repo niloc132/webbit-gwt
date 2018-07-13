@@ -36,6 +36,7 @@ These interfaces refer to each other in their generics. Here is a simple client 
      * Simple example of methods implemented by a GWT client that can be called from the server
      *
      */
+    @Endpoint
     public interface ChatClient extends Client<ChatClient, ChatServer> {
     	/**
     	 * Tells the client that a user posted a message to the chat room
@@ -74,7 +75,7 @@ app, call other methods, directly interact with the UI, etc.
      * Simple example of methods a server can have that can be invoked by a client.
      *
      */
-    @RemoteServiceRelativePath("/chat")
+    @Endpoint
     public interface ChatServer extends Server<ChatServer, ChatClient> {
     	/**
     	 * Brings the user into the chat room, with the given username
@@ -94,14 +95,17 @@ In this matching server interface, we can see the messages that any client can s
 connecting. The server in turn must implement this, and may call back to the client using any of the
 methods defined in the first interface.
 
+Both interfaces get a `@Endpoint` annotation, indicating that the annotation processor should look at
+them and construct an actual implementation to communicate over the wire.
+
 ### Client Wiring
-The client first builds an implementation of the client interface - this will be its way of recieving all
-'callbacks' from the server. Then, we declare an interface to connect to the server:
+In client code, first build an implementation of the client interface - this will be its way of receiving all
+'callbacks' from the server. To connect to the server, we create a `ServerBuilder` which we'll configure
+with the url to connect to the server, and details about creating the generated server endpoint:
 
-    interface ChatServerBuilder extends ServerBuilder<ChatServer> {}
+    ServerBuilder<ChatServer> builder = ServerBuilder.of(ChatServer_Impl::new);
 
-This interface can then be implemented with `GWT.create`, given a url and client instance, and the
-connection established:
+Now we can set the remote URL, create the connection, and attach the local "client" implementation.
 
     		// Create an instance of the build
     		final ChatServerBuilder builder = GWT.create(ChatServerBuilder.class);
@@ -116,8 +120,9 @@ connection established:
     		server.setClient(impl);
 
 Once the `onOpen()` method gets called on the client object, the connection is established, and the client
-may invoke any server method until `onClose()` is called. To restart the connection (or start another sim
-simultaneous connect), call `start()` again and then talk to the newly returned server object.
+may invoke any server method until `onClose()` is called. To restart the connection (or start another
+simultaneous connection), call `start()` again on the same instance and then talk to the newly returned
+server object.
 
 The `AbstractClientImpl` class can serve as a handy base class, providing default implementations of the
 `onOpen()` and `onClose()` methods that fire events.
