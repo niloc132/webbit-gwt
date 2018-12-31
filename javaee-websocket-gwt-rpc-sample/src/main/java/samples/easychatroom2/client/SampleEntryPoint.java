@@ -36,6 +36,7 @@ public class SampleEntryPoint implements EntryPoint {
 
 	@Override
 	public void onModuleLoad() {
+		new AjaxOnlyChatWidget().onSendClicked();
 		// We could create the 'server' itself, but then we have to wire up the websocket
 		// stuff, instead, we use a builder, which lets us set the URL once and create
 		// new instances on demand

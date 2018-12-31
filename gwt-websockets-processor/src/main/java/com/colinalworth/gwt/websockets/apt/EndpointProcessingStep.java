@@ -23,7 +23,10 @@ import com.colinalworth.gwt.websockets.apt.model.EndpointMethod;
 import com.colinalworth.gwt.websockets.apt.model.EndpointModel;
 import com.colinalworth.gwt.websockets.apt.model.EndpointPair;
 import com.colinalworth.gwt.websockets.shared.Endpoint;
+import com.colinalworth.gwt.websockets.shared.Endpoint.NoRemoteEndpoint;
 import com.colinalworth.gwt.websockets.shared.impl.AbstractEndpointImpl;
+import com.colinalworth.gwt.websockets.shared.impl.AbstractNoRemoteImpl;
+import com.colinalworth.gwt.websockets.shared.impl.AbstractRemoteServiceImpl;
 import com.google.auto.common.BasicAnnotationProcessor.ProcessingStep;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
@@ -91,24 +94,46 @@ public class EndpointProcessingStep implements ProcessingStep {
 
 	private void implement(EndpointModel model, EndpointModel remoteModel) {
 		// set up basics, declare superclass (and extra contract wiring?)
-		String packageName = model.getPackage(processingEnv);
-		Builder builder = TypeSpec.classBuilder(model.getGeneratedTypeName())
-				.addSuperinterface(model.getInterface())
+		String packageName = model.isPlaceholder() ? remoteModel.getPackage(processingEnv) : model.getPackage(processingEnv);
+		String generatedTypeName = model.isPlaceholder() ? remoteModel.getGeneratedTypeName() + "Remote" : model.getGeneratedTypeName();
+		Builder builder = TypeSpec.classBuilder(generatedTypeName)
+				.addSuperinterface(model.isPlaceholder() ? ParameterizedTypeName.get(ClassName.get(NoRemoteEndpoint.class), remoteModel.getInterface()) : model.getInterface())
 				.addAnnotation(AnnotationSpec.builder(Generated.class).addMember("value", "\"$L\"", EndpointProcessor.class.getCanonicalName()).build())
 				.addModifiers(Modifier.PUBLIC);
 
-		if (model.getSpecifiedSuperclass(processingEnv) != null) {
-			builder.superclass(model.getSpecifiedSuperclass(processingEnv));
+		// this is disgusting, need to find a way to make it part of the model, or
+		// fork this type?
+		if (model.isPlaceholder() || remoteModel.isPlaceholder()) {
+			if (model.isPlaceholder()) {
+				builder.superclass(ParameterizedTypeName.get(
+						ClassName.get(AbstractNoRemoteImpl.class),
+						remoteModel.getInterface()
+				));
+			} else if (remoteModel.isPlaceholder()) {
+				builder.superclass(ParameterizedTypeName.get(
+						//TODO read this from the endpointmodel somehow, hardcoding this is stupid
+						ClassName.get(AbstractRemoteServiceImpl.class),
+						ParameterizedTypeName.get(
+								ClassName.get(NoRemoteEndpoint.class),
+								model.getInterface()
+						)
+				));
+			}
 		} else {
-			builder.superclass(ClassName.get(AbstractEndpointImpl.class));
+			// finally the sane case, where we just ask the model and it works it out for us
+			TypeName superclass = model.getSpecifiedSuperclass(processingEnv, remoteModel);
+			if (superclass == null) {
+				superclass = ClassName.get(AbstractEndpointImpl.class);
+			}
+			builder.superclass(superclass);
 		}
 
 		// create the serializer type
-		TypeSpec serializer = declareSerializer(model, remoteModel);
+		TypeSpec serializer = declareSerializer(model, remoteModel, generatedTypeName + "Serializer");
 		builder.addType(serializer);
 
 		// create a field for the serializer
-		ClassName serializerType = ClassName.get(packageName, model.getGeneratedTypeName(), serializer.name);
+		ClassName serializerType = ClassName.get(packageName, generatedTypeName, serializer.name);
 		builder.addField(
 				serializerType,
 				"s",
@@ -222,8 +247,8 @@ public class EndpointProcessingStep implements ProcessingStep {
 				invokeBody.add("// read callbackId first\n");
 				invokeBody.addStatement("callbackId = reader.readInt()");
 			}
-
-			String remoteGetter = model.getRemoteEndpointGetterMethodName();
+			processingEnv.getMessager().printMessage(Kind.MANDATORY_WARNING, remoteMethod.getElement().getSimpleName());
+			String remoteGetter = model.getRemoteEndpointGetterMethodName(processingEnv);
 			invokeBody.add("$L().$L(", remoteGetter, remoteMethod.getElement().getSimpleName().toString());
 			boolean first = true;
 			// Note the use of "types to write" - this seems backward, but we're calling into the
@@ -294,8 +319,8 @@ public class EndpointProcessingStep implements ProcessingStep {
 		}
 	}
 
-	private TypeSpec declareSerializer(EndpointModel model, EndpointModel remoteModel) {
-		Builder builder = TypeSpec.interfaceBuilder(model.getGeneratedTypeName() + "Serializer")
+	private TypeSpec declareSerializer(EndpointModel model, EndpointModel remoteModel, String serTypeName) {
+		Builder builder = TypeSpec.interfaceBuilder(serTypeName)
 				.addAnnotation(SerializationWiring.class)
 				.addModifiers(Modifier.PUBLIC);
 

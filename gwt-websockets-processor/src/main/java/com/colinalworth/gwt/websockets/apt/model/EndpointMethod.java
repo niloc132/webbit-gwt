@@ -82,7 +82,7 @@ public class EndpointMethod {
 	 * Note that Void is not omitted (but can only be serialized as null), but
 	 * callbacks could skip writing (and reading) Voids.
 	 */
-	public List<? extends TypeName> getTypesToRead(ProcessingEnvironment env) {
+	public List<TypeName> getTypesToRead(ProcessingEnvironment env) {
 		if (hasCallback(env)) {
 			TypeMirror callback = mirror.getParameterTypes().get(mirror.getParameterTypes().size() - 1);
 			return ((DeclaredType) callback).getTypeArguments()
@@ -98,7 +98,7 @@ public class EndpointMethod {
 	 * by code implementing this interface - the non-callback parameters of each
 	 * method.
 	 */
-	public List<? extends TypeName> getTypesToWrite(ProcessingEnvironment env) {
+	public List<TypeName> getTypesToWrite(ProcessingEnvironment env) {
 		int limit = hasCallback(env)
 				? mirror.getParameterTypes().size() - 1
 				: mirror.getParameterTypes().size();

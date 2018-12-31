@@ -17,4 +17,14 @@
   limitations under the License.
   #L%
   -->
-<web-app></web-app>
+<web-app>
+
+	<servlet>
+		<servlet-name>hello</servlet-name>
+		<servlet-class>samples.easychatroom2.server.ChatRemoteServiceServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>hello</servlet-name>
+		<url-pattern>/hello</url-pattern>
+	</servlet-mapping>
+</web-app>

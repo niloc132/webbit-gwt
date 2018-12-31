@@ -44,7 +44,11 @@ public @interface Endpoint {
 	 * interface to process. Expected to be used for cases like RemoteService,
 	 * where callbacks are the only way to communicate back with the client.
 	 */
-	final class NoRemoteEndpoint {}
+	interface NoRemoteEndpoint<T> {
+		void setRemote(T remote);
+		@RemoteEndpointSupplier
+		T getRemote();
+	}
 
 	/**
 	 * Describes the matching remote interface that will mirror this one. Optional,

@@ -21,13 +21,16 @@ package com.colinalworth.gwt.websockets.apt.model;
 
 import com.colinalworth.gwt.websockets.shared.Endpoint;
 import com.colinalworth.gwt.websockets.shared.Endpoint.BaseClass;
+import com.colinalworth.gwt.websockets.shared.Endpoint.NoRemoteEndpoint;
 import com.colinalworth.gwt.websockets.shared.Endpoint.RemoteEndpointSupplier;
+import com.google.auto.common.MoreElements;
 import com.google.auto.common.MoreTypes;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.vertispan.gwtapt.JTypeUtils;
 
+import javax.annotation.Nullable;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -38,6 +41,7 @@ import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import javax.tools.Diagnostic.Kind;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -67,8 +71,10 @@ public class EndpointModel implements Comparable<EndpointModel> {
 	// the interface to be implemented
 	private final Element endpointElement;
 
-	// the interface which is extended - right now just a few checks to delegate
-	// work, but eventually should be more pluggable. this may be null
+	// The interface which is extended - right now just a few checks to delegate
+	// work, but eventually should be more pluggable.
+	// This may be null.
+	@Nullable
 	private final DeclaredType extraContractType;
 
 	public EndpointModel(Element endpointElement, DeclaredType extraContractType) {
@@ -120,7 +126,7 @@ public class EndpointModel implements Comparable<EndpointModel> {
 			throw new IllegalStateException("No corresponding endpoint found for " + this + ", did you forget to extend another interface, or add a value to @Endpoint?");
 		}
 
-		ExecutableType remoteEndpointType = (ExecutableType) env.getTypeUtils().asMemberOf((DeclaredType) endpointElement.asType(), getRemoteEndpointGetter());
+		ExecutableType remoteEndpointType = (ExecutableType) env.getTypeUtils().asMemberOf((DeclaredType) endpointElement.asType(), getRemoteEndpointGetter(env));
 		EndpointModel matching = from(env.getTypeUtils().asElement(remoteEndpointType.getReturnType()), env);
 
 //		// confirm that it matches us back again, else something is misconfigured
@@ -135,6 +141,7 @@ public class EndpointModel implements Comparable<EndpointModel> {
 		return JTypeUtils.getFlattenedSupertypeHierarchy(env.getTypeUtils(), endpointElement.asType())
 				.stream()
 				.map(MoreTypes::asElement)
+				// ignore all methods in the NoRemoteEndpoint type
 				.map(Element::getEnclosedElements)
 				.map(ElementFilter::methodsIn)
 				.flatMap(List::stream)
@@ -145,6 +152,8 @@ public class EndpointModel implements Comparable<EndpointModel> {
 
 				// skip any method declared on our extra contract type
 				.filter(method -> extraContractType == null || !ClassName.get(method.getEnclosingElement().asType()).equals(ClassName.get(extraContractType.asElement().asType())))
+				// skip any method declared on NoRemoteEndpoint
+				.filter(method -> !ClassName.get(NoRemoteEndpoint.class).toString().equals(ClassName.get((TypeElement) method.getEnclosingElement()).toString()))
 				// skip anything on Object
 				.filter(method -> !Object.class.getName().equals(ClassName.get(method.getEnclosingElement().asType()).toString()))
 
@@ -163,6 +172,10 @@ public class EndpointModel implements Comparable<EndpointModel> {
 		return endpointElement.getSimpleName().toString() + "_Impl";
 	}
 
+	public boolean isPlaceholder() {
+		return ClassName.get((TypeElement) endpointElement).toString().equals(ClassName.get(NoRemoteEndpoint.class).toString());
+	}
+
 	public String getPackage(ProcessingEnvironment env) {
 		return env.getElementUtils().getPackageOf(endpointElement).getQualifiedName().toString();
 	}
@@ -171,7 +184,10 @@ public class EndpointModel implements Comparable<EndpointModel> {
 		return ClassName.get(endpointElement.asType());
 	}
 
-	public TypeName getSpecifiedSuperclass(ProcessingEnvironment env) {
+	public TypeName getSpecifiedSuperclass(ProcessingEnvironment env, EndpointModel remote) {
+		if (remote != null && isPlaceholder()) {
+			return remote.getSpecifiedSuperclass(env, null);
+		}
 		if (extraContractType != null) {
 			BaseClass annotation = extraContractType.asElement().getAnnotation(BaseClass.class);
 			DeclaredType supertype = (DeclaredType) readClassValueFromAnnotation(env, annotation::value);
@@ -197,21 +213,28 @@ public class EndpointModel implements Comparable<EndpointModel> {
 		}
 	}
 
-	public String getRemoteEndpointGetterMethodName() {
-		return getRemoteEndpointGetter().getSimpleName().toString();
+	public String getRemoteEndpointGetterMethodName(ProcessingEnvironment env) {
+		if (isPlaceholder()) {
+			return "getRemote";
+		}
+		return getRemoteEndpointGetter(env).getSimpleName().toString();
 	}
 
-	private ExecutableElement getRemoteEndpointGetter() {
+	private ExecutableElement getRemoteEndpointGetter(ProcessingEnvironment env) {
 		final Element typeToCheck;
 		if (extraContractType != null) {
 			typeToCheck = extraContractType.asElement();
 		} else {
 			typeToCheck = endpointElement;
 		}
-		return ElementFilter.methodsIn(typeToCheck.getEnclosedElements())
+		return JTypeUtils.getFlattenedSupertypeHierarchy(env.getTypeUtils(), typeToCheck.asType())
 				.stream()
+				.map(MoreTypes::asElement)
+				.map(Element::getEnclosedElements)
+				.map(ElementFilter::methodsIn)
+				.flatMap(List::stream)
 				.filter(m -> m.getAnnotation(RemoteEndpointSupplier.class) != null)
 				.findFirst()
-				.orElseThrow(IllegalStateException::new);
+				.orElseThrow(() -> new IllegalStateException("Failed to find a method with @RemoteEndpointSupplier in the " + typeToCheck + " hierarchy (" + this + ")"));
 	}
 }
